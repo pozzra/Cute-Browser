@@ -41,21 +41,6 @@ class CuteMenuOverlay extends StatelessWidget {
                 Navigator.pop(context);
               },
             ),
-            _buildMenuItem(
-              context,
-              icon: Icons.visibility_off_outlined,
-              title: "New private tab",
-              onTap: () {
-                browserProvider.addTab();
-                Navigator.pop(context);
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.grid_view_rounded,
-              title: "Add tabs to group",
-              onTap: () => Navigator.pop(context),
-            ),
             Divider(color: dividerColor),
             _buildMenuItem(
               context,
@@ -63,7 +48,10 @@ class CuteMenuOverlay extends StatelessWidget {
               title: "History",
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                );
               },
             ),
             _buildMenuItem(
@@ -72,7 +60,10 @@ class CuteMenuOverlay extends StatelessWidget {
               title: "Downloads",
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const DownloadsScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DownloadsScreen()),
+                );
               },
             ),
             _buildMenuItem(
@@ -81,14 +72,11 @@ class CuteMenuOverlay extends StatelessWidget {
               title: "Bookmarks",
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BookmarksScreen()),
+                );
               },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.account_balance_wallet_outlined,
-              title: "Cute Wallet",
-              onTap: () => Navigator.pop(context),
             ),
             _buildMenuItem(
               context,
@@ -97,14 +85,11 @@ class CuteMenuOverlay extends StatelessWidget {
               textColor: browserProvider.themeColor,
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const AiChatScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AiChatScreen()),
+                );
               },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.tab_unselected_rounded,
-              title: "Recent tabs",
-              onTap: () => Navigator.pop(context),
             ),
             Divider(color: dividerColor),
             // Expanded Settings Section
@@ -142,10 +127,13 @@ class CuteMenuOverlay extends StatelessWidget {
               icon: Icons.star_rounded,
               title: "Set current as Favorite",
               onTap: () {
-                if (browserProvider.currentUrl.isNotEmpty && browserProvider.currentUrl != "about:blank") {
+                if (browserProvider.currentUrl.isNotEmpty &&
+                    browserProvider.currentUrl != "about:blank") {
                   browserProvider.updateFavoriteUrl(browserProvider.currentUrl);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Current page set as favorite! 💖")),
+                    const SnackBar(
+                      content: Text("Current page set as favorite! 💖"),
+                    ),
                   );
                 }
               },
@@ -157,25 +145,6 @@ class CuteMenuOverlay extends StatelessWidget {
               onTap: () => _showFavoriteDialog(context, browserProvider),
             ),
             Divider(color: dividerColor),
-            _buildToggleItem(
-              context,
-              icon: Icons.vpn_lock_outlined,
-              title: "Cute VPN",
-              value: false, // Placeholder for VPN state
-              onChanged: (val) {},
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.change_history_rounded,
-              title: "Cute Rewards",
-              onTap: () => Navigator.pop(context),
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.newspaper_outlined,
-              title: "Cute News",
-              onTap: () => Navigator.pop(context),
-            ),
             Divider(color: dividerColor),
             _buildMenuItem(
               context,
@@ -199,8 +168,8 @@ class CuteMenuOverlay extends StatelessWidget {
             ),
             _buildMenuItem(
               context,
-              icon: Icons.logout_rounded,
-              title: "Exit",
+              icon: Icons.home_rounded,
+              title: "Home",
               onTap: () {
                 Navigator.pop(context);
                 browserProvider.goHome();
@@ -234,7 +203,12 @@ class CuteMenuOverlay extends StatelessWidget {
                     icon: const Icon(Icons.download_rounded),
                     onPressed: () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const DownloadsScreen()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DownloadsScreen(),
+                        ),
+                      );
                     },
                   ),
                   IconButton(
@@ -287,7 +261,11 @@ class CuteMenuOverlay extends StatelessWidget {
               ),
             if (trailing != null) trailing,
             if (showArrow)
-              Icon(Icons.chevron_right_rounded, color: Colors.grey[500], size: 20),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.grey[500],
+                size: 20,
+              ),
           ],
         ),
       ),
@@ -301,7 +279,10 @@ class CuteMenuOverlay extends StatelessWidget {
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
-    final browserProvider = Provider.of<BrowserProvider>(context, listen: false);
+    final browserProvider = Provider.of<BrowserProvider>(
+      context,
+      listen: false,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       child: Row(
@@ -309,7 +290,10 @@ class CuteMenuOverlay extends StatelessWidget {
           Icon(icon, color: CuteColors.darkText, size: 20),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(title, style: const TextStyle(color: CuteColors.darkText, fontSize: 14)),
+            child: Text(
+              title,
+              style: const TextStyle(color: CuteColors.darkText, fontSize: 14),
+            ),
           ),
           Text(
             value ? "On" : "Off",
@@ -326,7 +310,9 @@ class CuteMenuOverlay extends StatelessWidget {
               value: value,
               onChanged: onChanged,
               activeColor: browserProvider.themeColor,
-              activeTrackColor: browserProvider.themeColor.withValues(alpha: 0.3),
+              activeTrackColor: browserProvider.themeColor.withValues(
+                alpha: 0.3,
+              ),
             ),
           ),
         ],
@@ -351,7 +337,14 @@ class CuteMenuOverlay extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Theme Color", style: TextStyle(color: CuteColors.darkText, fontSize: 13, fontWeight: FontWeight.bold)),
+          const Text(
+            "Theme Color",
+            style: TextStyle(
+              color: CuteColors.darkText,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -368,7 +361,9 @@ class CuteMenuOverlay extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
-                        border: isSelected ? Border.all(color: Colors.black54, width: 2) : null,
+                        border: isSelected
+                            ? Border.all(color: Colors.black54, width: 2)
+                            : null,
                       ),
                     ),
                   );
@@ -382,11 +377,15 @@ class CuteMenuOverlay extends StatelessWidget {
                         content: SingleChildScrollView(
                           child: ColorPicker(
                             pickerColor: browserProvider.themeColor,
-                            onColorChanged: (color) => browserProvider.updateThemeColor(color),
+                            onColorChanged: (color) =>
+                                browserProvider.updateThemeColor(color),
                           ),
                         ),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Done'),
+                          ),
                         ],
                       ),
                     );
@@ -395,11 +394,17 @@ class CuteMenuOverlay extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Colors.red, Colors.blue, Colors.green]),
+                      gradient: const LinearGradient(
+                        colors: [Colors.red, Colors.blue, Colors.green],
+                      ),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.grey[300]!, width: 2),
                     ),
-                    child: const Icon(Icons.colorize, size: 14, color: Colors.white),
+                    child: const Icon(
+                      Icons.colorize,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -416,7 +421,9 @@ class CuteMenuOverlay extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           title: const Text("Set Favorite Web Page"),
           content: TextField(
             controller: controller,

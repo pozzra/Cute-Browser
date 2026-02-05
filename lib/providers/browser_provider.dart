@@ -11,7 +11,9 @@ import '../utils/ad_blocker_script.dart';
 import '../utils/background_play_script.dart';
 import '../services/notification_service.dart';
 import '../services/download_service.dart';
+import '../utils/google_login_fix_script.dart';
 import 'dart:convert';
+import 'dart:math';
 
 class BrowserTab {
   late WebViewController controller;
@@ -20,9 +22,8 @@ class BrowserTab {
   bool isLoading = true;
   bool canGoBack = false;
   bool canGoForward = false;
-  bool isHomePage = true; 
+  bool isHomePage = true;
   String title = "Home";
-  double zoomLevel = 1.0;
 
   // Callback to notify the provider when state changes in this tab
   final VoidCallback onStateChanged;
@@ -33,9 +34,9 @@ class BrowserTab {
 
   static const String desktopUserAgent =
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
-  
+
   static const String mobileUserAgent =
-      "Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36";
+      "Mozilla/5.0 (Linux; Android 14; Pixel 7 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
 
   final Function(Map<String, dynamic> event) onPlaybackEvent;
 
@@ -47,42 +48,48 @@ class BrowserTab {
     this.shouldEnableBackgroundPlay,
     this.shouldEnableDesktopMode,
   }) {
-    isHomePage = currentUrl == "https://www.google.com" || currentUrl == "about:blank"; 
+    isHomePage =
+        currentUrl == "https://www.google.com" || currentUrl == "about:blank";
     controller = WebViewController();
     if (!kIsWeb) {
       controller.setJavaScriptMode(JavaScriptMode.unrestricted);
     }
 
     controller.setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            this.progress = progress / 100;
-            isLoading = progress != 100;
-            onStateChanged();
-          },
-          onPageStarted: (String url) {
-            isHomePage = url == "about:blank";
-            currentUrl = url;
-            isLoading = true;
-            onStateChanged();
-          },
-          onPageFinished: (String url) async {
-            isLoading = false;
-            currentUrl = url;
-            title = (await controller.getTitle()) ?? "New Tab";
-            await _checkNavigationHistory();
-            // Add to history
-            onPageLoaded(title, currentUrl);
+      NavigationDelegate(
+        onProgress: (int progress) {
+          this.progress = progress / 100;
+          isLoading = progress != 100;
+          onStateChanged();
+        },
+        onPageStarted: (String url) {
+          isHomePage = url == "about:blank";
+          currentUrl = url;
+          isLoading = true;
+          // Identity hardening
+          controller.runJavaScript(googleLoginFixScript);
+          onStateChanged();
+        },
+        onPageFinished: (String url) async {
+          isLoading = false;
+          currentUrl = url;
+          title = (await controller.getTitle()) ?? "New Tab";
+          await _checkNavigationHistory();
+          // Add to history
+          onPageLoaded(title, currentUrl);
 
-            // Inject AdBlocker
-            if (shouldBlockAds != null && shouldBlockAds!()) {
-               controller.runJavaScript(adBlockerScript);
-            }
-            if (shouldEnableBackgroundPlay != null && shouldEnableBackgroundPlay!()) {
-               controller.runJavaScript(backgroundPlayScript);
-            }
-            if (shouldEnableDesktopMode != null && shouldEnableDesktopMode!()) {
-               controller.runJavaScript("""
+          // Inject AdBlocker
+          if (shouldBlockAds != null && shouldBlockAds!()) {
+            controller.runJavaScript(adBlockerScript);
+          }
+          if (shouldEnableBackgroundPlay != null &&
+              shouldEnableBackgroundPlay!()) {
+            controller.runJavaScript(backgroundPlayScript);
+          }
+          // Identity hardening (run again after load)
+          controller.runJavaScript(googleLoginFixScript);
+          if (shouldEnableDesktopMode != null && shouldEnableDesktopMode!()) {
+            controller.runJavaScript("""
                  var meta = document.querySelector('meta[name="viewport"]');
                  if (meta) {
                    meta.setAttribute('content', 'width=1280, initial-scale=0.25');
@@ -93,46 +100,52 @@ class BrowserTab {
                    document.getElementsByTagName('head')[0].appendChild(meta);
                  }
                """);
-            }
-            
-            onStateChanged();
-          },
-          onWebResourceError: (WebResourceError error) {},
-          onNavigationRequest: (NavigationRequest request) {
-            final url = request.url.toLowerCase();
-            final downloadExtensions = [
-              '.apk', '.zip', '.rar', '.pdf', '.mp4', '.mp3', 
-              '.exe', '.dmg', '.iso', '.7z', '.gz', '.deb'
-            ];
-            
-            bool isDownload = downloadExtensions.any((ext) => url.split('?').first.endsWith(ext));
-            
-            if (isDownload) {
-               String fileName = request.url.split("/").last.split("?").first;
-               if (fileName.isEmpty) fileName = "download";
-               
-               DownloadService.downloadFile(
-                 url: request.url,
-                 fileName: fileName,
-               );
-               return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
-          },
-        ),
-      );
+          }
+
+          onStateChanged();
+        },
+        onWebResourceError: (WebResourceError error) {},
+        onNavigationRequest: (NavigationRequest request) {
+          final url = request.url.toLowerCase();
+          final downloadExtensions = [
+            '.apk',
+            '.zip',
+            '.rar',
+            '.pdf',
+            '.mp4',
+            '.mp3',
+            '.exe',
+            '.dmg',
+            '.iso',
+            '.7z',
+            '.gz',
+            '.deb',
+          ];
+
+          bool isDownload = downloadExtensions.any(
+            (ext) => url.split('?').first.endsWith(ext),
+          );
+
+          if (isDownload) {
+            String fileName = request.url.split("/").last.split("?").first;
+            if (fileName.isEmpty) fileName = "download";
+
+            DownloadService.downloadFile(url: request.url, fileName: fileName);
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
+      ),
+    );
     controller.setBackgroundColor(const Color(0x00000000));
-    
-    // Apply Desktop User Agent if background play or desktop mode is requested
-    final useDesktopUA = (shouldEnableBackgroundPlay != null && shouldEnableBackgroundPlay!()) ||
-        (shouldEnableDesktopMode != null && shouldEnableDesktopMode!());
-    if (useDesktopUA) {
-      controller.setUserAgent(desktopUserAgent);
-    }
+
+    // Aggressively ensure User-Agent is applied immediately after controller init
+    updateWebViewSettings(initialUrl: currentUrl);
 
     if (!kIsWeb) {
       if (controller.platform is AndroidWebViewController) {
-        (controller.platform as AndroidWebViewController).setMediaPlaybackRequiresUserGesture(false);
+        (controller.platform as AndroidWebViewController)
+            .setMediaPlaybackRequiresUserGesture(false);
       }
 
       controller.addJavaScriptChannel(
@@ -148,6 +161,9 @@ class BrowserTab {
       );
     }
     controller.loadRequest(Uri.parse(currentUrl));
+    if (currentUrl != "about:blank") {
+      isHomePage = false;
+    }
   }
 
   void loadUrl(String url) {
@@ -158,29 +174,47 @@ class BrowserTab {
     // Also check if it starts with http/https.
     if (!url.startsWith('http')) {
       if (url.contains(' ') || (!url.contains('.') && url != 'localhost')) {
-         url = 'https://www.google.com/search?q=${Uri.encodeComponent(url)}';
+        url = 'https://www.google.com/search?q=${Uri.encodeComponent(url)}';
       } else {
-         url = 'https://$url';
+        url = 'https://$url';
       }
     }
-    controller.loadRequest(Uri.parse(url));
+
+    // Google Login Fix: Use Desktop UA and spoof X-Requested-With for Google login
+    final bool isGoogleLogin = url.contains("accounts.google.com");
+    final headers = <String, String>{};
+
+    if (isGoogleLogin) {
+      // Chrome Android package name - Google trusts this
+      headers["X-Requested-With"] = "com.android.chrome";
+      controller.setUserAgent(desktopUserAgent);
+    } else if (url.contains("google.com") || url.contains("youtube.com")) {
+      headers["X-Requested-With"] = "com.android.chrome";
+    }
+
+    controller.loadRequest(Uri.parse(url), headers: headers);
   }
 
-  void updateWebViewSettings() {
-    final useDesktopUA = (shouldEnableBackgroundPlay != null && shouldEnableBackgroundPlay!()) ||
-        (shouldEnableDesktopMode != null && shouldEnableDesktopMode!());
-    
+  void updateWebViewSettings({String? initialUrl}) {
+    final String url = initialUrl ?? currentUrl;
+    final bool isGoogleLogin = url.contains("accounts.google.com");
+
+    final useDesktopUA =
+        (shouldEnableBackgroundPlay != null && shouldEnableBackgroundPlay!()) ||
+        (shouldEnableDesktopMode != null && shouldEnableDesktopMode!()) ||
+        isGoogleLogin;
+
     // Explicitly set User-Agent for both modes to ensure clean switch
     if (useDesktopUA) {
       controller.setUserAgent(desktopUserAgent);
     } else {
       // Use a high-quality mobile UA instead of null to bypass Google's "Insecure Browser" blocking
-      controller.setUserAgent(mobileUserAgent); 
+      controller.setUserAgent(mobileUserAgent);
     }
 
-    // Only reload/apply JS if it's not the home page
-    if (!isHomePage && currentUrl != "about:blank") {
-       controller.reload();
+    // Only reload/apply JS if it's not the home page and not during init
+    if (initialUrl == null && !isHomePage && currentUrl != "about:blank") {
+      controller.reload();
     }
   }
 
@@ -191,22 +225,24 @@ class BrowserTab {
 
   void resumeMedia() {
     if (shouldEnableBackgroundPlay != null && shouldEnableBackgroundPlay!()) {
-       controller.runJavaScript("if(typeof syncAllVideos === 'function') syncAllVideos();");
+      controller.runJavaScript(
+        "if(typeof syncAllVideos === 'function') syncAllVideos();",
+      );
     }
-  }
-
-  void setZoom(double level) {
-    zoomLevel = level;
-    controller.runJavaScript("document.body.style.zoom = '$zoomLevel'");
   }
 
   Future<String> getPageContent() async {
     try {
-      final result = await controller.runJavaScriptReturningResult("document.body.innerText");
+      final result = await controller.runJavaScriptReturningResult(
+        "document.body.innerText",
+      );
       String text = result.toString();
       // Clean up the result if it's a quoted string from JS
       if (text.startsWith('"') && text.endsWith('"')) {
-        text = text.substring(1, text.length - 1).replaceAll(r'\"', '"').replaceAll(r'\n', '\n');
+        text = text
+            .substring(1, text.length - 1)
+            .replaceAll(r'\"', '"')
+            .replaceAll(r'\n', '\n');
       }
       return "Title: $title\nURL: $currentUrl\n\nContent:\n$text";
     } catch (e) {
@@ -222,20 +258,53 @@ class Bookmark {
   Bookmark({required this.title, required this.url});
 }
 
+class Shortcut {
+  final String name;
+  final String url;
+  final String icon;
+  final String color;
+
+  Shortcut({
+    required this.name,
+    required this.url,
+    required this.icon,
+    required this.color,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'url': url,
+    'icon': icon,
+    'color': color,
+  };
+
+  factory Shortcut.fromJson(Map<String, dynamic> json) => Shortcut(
+    name: json['name'] as String,
+    url: json['url'] as String,
+    icon: json['icon'] as String,
+    color: json['color'] as String,
+  );
+}
+
 class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   final List<BrowserTab> _tabs = [];
   final List<Bookmark> _bookmarks = [];
+  final List<Shortcut> _shortcuts = [];
   int _currentIndex = 0;
 
   bool get isSafeBrowsingEnabled => _isSafeBrowsingEnabled;
   bool _isSafeBrowsingEnabled = true;
+  bool _isAppStarting = true;
+  bool get isAppStarting => _isAppStarting;
 
   List<BrowserTab> get tabs => _tabs;
   List<Bookmark> get bookmarks => _bookmarks;
+  List<Shortcut> get shortcuts => _shortcuts;
   int get currentIndex => _currentIndex;
   BrowserTab get currentTab => _tabs[_currentIndex];
 
-  bool get isSecureSite => tabs.isNotEmpty && currentTab.currentUrl.startsWith('https://');
+  bool get isSecureSite =>
+      tabs.isNotEmpty && currentTab.currentUrl.startsWith('https://');
 
   // Delegate getters to current tab
   WebViewController get controller =>
@@ -247,21 +316,28 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool get canGoForward => _tabs.isEmpty ? false : currentTab.canGoForward;
   String get currentTitle => _tabs.isEmpty ? "" : currentTab.title;
 
+  void _handleTabStateChange() {
+    if (_isAppStarting && !isLoading) {
+      _isAppStarting = false;
+    }
+    _saveTabs();
+    notifyListeners();
+  }
+
   BrowserProvider() {
     WidgetsBinding.instance.addObserver(this);
-    
+
     // 1. Initialize with one default tab immediately so getters dont crash
-    _tabs.add(BrowserTab(
-      onStateChanged: () {
-        _saveTabs();
-        notifyListeners();
-      },
-      onPageLoaded: addToHistory,
-      onPlaybackEvent: _handlePlaybackEvent,
-      shouldBlockAds: () => _isAdBlockEnabled,
-      shouldEnableBackgroundPlay: () => _isBackgroundPlayEnabled,
-      shouldEnableDesktopMode: () => _isDesktopMode,
-    ));
+    _tabs.add(
+      BrowserTab(
+        onStateChanged: _handleTabStateChange,
+        onPageLoaded: addToHistory,
+        onPlaybackEvent: _handlePlaybackEvent,
+        shouldBlockAds: () => _isAdBlockEnabled,
+        shouldEnableBackgroundPlay: () => _isBackgroundPlayEnabled,
+        shouldEnableDesktopMode: () => _isDesktopMode,
+      ),
+    );
     requestNotificationPermission();
     _loadSettings().then((_) {
       initBackgroundMode();
@@ -277,9 +353,11 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     debugPrint("App LifeCycle State: $state");
-    
+
     // Re-verify background mode when app goes to background
-    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
       if (_isBackgroundPlayEnabled) {
         _enableBackgroundMode();
         // Force resume all tabs if engine tried to pause
@@ -288,29 +366,32 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
         }
       }
     } else if (state == AppLifecycleState.resumed) {
-       // When coming back to foreground, we don't force play.
-       // The user will decide or the script will sync if needed.
-       // This prevents "un-pausing" when the user just returns to the app.
+      // When coming back to foreground, we don't force play.
+      // The user will decide or the script will sync if needed.
+      // This prevents "un-pausing" when the user just returns to the app.
     }
   }
 
   void addTab({String? url}) {
-    _tabs.add(BrowserTab(
-      onStateChanged: () {
-        _saveTabs();
-        notifyListeners();
-      },
-      onPageLoaded: addToHistory,
-      onPlaybackEvent: _handlePlaybackEvent,
-      shouldBlockAds: () => _isAdBlockEnabled,
-      shouldEnableBackgroundPlay: () => _isBackgroundPlayEnabled,
-      shouldEnableDesktopMode: () => _isDesktopMode,
-    ));
-    if (url != null && url != "about:blank") {
-      _tabs.last.currentUrl = url;
-      // Note: we might need a delay or wait for controller init, 
-      // but BrowserTab constructor loads immediately.
+    _tabs.add(
+      BrowserTab(
+        onStateChanged: _handleTabStateChange,
+        onPageLoaded: addToHistory,
+        onPlaybackEvent: _handlePlaybackEvent,
+        shouldBlockAds: () => _isAdBlockEnabled,
+        shouldEnableBackgroundPlay: () => _isBackgroundPlayEnabled,
+        shouldEnableDesktopMode: () => _isDesktopMode,
+      ),
+    );
+
+    // Use provided URL, then favorite URL, then dashboard
+    final String targetUrl =
+        url ?? (_favoriteUrl.isNotEmpty ? _favoriteUrl : "about:blank");
+
+    if (targetUrl != "about:blank") {
+      _tabs.last.loadUrl(targetUrl);
     }
+
     _currentIndex = _tabs.length - 1;
     _saveTabs();
     notifyListeners();
@@ -331,17 +412,19 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   void closeAllTabs() {
     _tabs.clear();
     // Always keep at least one tab
-    _tabs.add(BrowserTab(
-      onStateChanged: () {
-        _saveTabs();
-        notifyListeners();
-      },
-      onPageLoaded: addToHistory,
-      onPlaybackEvent: _handlePlaybackEvent,
-      shouldBlockAds: () => _isAdBlockEnabled,
-      shouldEnableBackgroundPlay: () => _isBackgroundPlayEnabled,
-      shouldEnableDesktopMode: () => _isDesktopMode,
-    ));
+    _tabs.add(
+      BrowserTab(
+        onStateChanged: () {
+          _saveTabs();
+          notifyListeners();
+        },
+        onPageLoaded: addToHistory,
+        onPlaybackEvent: _handlePlaybackEvent,
+        shouldBlockAds: () => _isAdBlockEnabled,
+        shouldEnableBackgroundPlay: () => _isBackgroundPlayEnabled,
+        shouldEnableDesktopMode: () => _isDesktopMode,
+      ),
+    );
     _currentIndex = 0;
     _saveTabs();
     notifyListeners();
@@ -358,13 +441,6 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   void loadUrl(String url) {
     if (_tabs.isNotEmpty) {
       currentTab.loadUrl(url);
-    }
-  }
-
-  void setZoom(double level) {
-    if (_tabs.isNotEmpty) {
-      currentTab.setZoom(level);
-      notifyListeners();
     }
   }
 
@@ -422,7 +498,8 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   // --- History ---
-  final List<Bookmark> _history = []; // Reusing Bookmark class for history items for simplicity
+  final List<Bookmark> _history =
+      []; // Reusing Bookmark class for history items for simplicity
   List<Bookmark> get history => _history;
 
   void addToHistory(String title, String url) {
@@ -440,9 +517,14 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     _history.clear();
     notifyListeners();
     // Also clear web cache/cookies
+    await clearAllData();
+  }
+
+  Future<void> clearAllData() async {
     await controller.clearCache();
     await controller.clearLocalStorage();
     await WebViewCookieManager().clearCookies();
+    notifyListeners();
   }
 
   // --- Settings / Theme ---
@@ -459,7 +541,8 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool get isBackgroundPlayEnabled => _isBackgroundPlayEnabled;
   bool get isDesktopMode => _isDesktopMode;
   String get favoriteUrl => _favoriteUrl;
-  Color get adaptiveTextColor => _themeColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+  Color get adaptiveTextColor =>
+      _themeColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
@@ -468,40 +551,101 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
       _themeColor = Color(colorValue);
     }
     _isAdBlockEnabled = prefs.getBool('isAdBlockEnabled') ?? true;
-    _isBackgroundPlayEnabled = prefs.getBool('isBackgroundPlayEnabled') ?? false;
+    _isBackgroundPlayEnabled =
+        prefs.getBool('isBackgroundPlayEnabled') ?? false;
     _isDesktopMode = prefs.getBool('isDesktopMode') ?? false;
     _isSafeBrowsingEnabled = prefs.getBool('isSafeBrowsingEnabled') ?? true;
     _favoriteUrl = prefs.getString('favoriteUrl') ?? "";
-    
+
+    // Load Shortcuts
+    final shortcutsJson = prefs.getStringList('shortcuts');
+    if (shortcutsJson != null) {
+      _shortcuts.clear();
+      _shortcuts.addAll(
+        shortcutsJson.map((s) => Shortcut.fromJson(jsonDecode(s))),
+      );
+    } else {
+      // Default shortcuts
+      _shortcuts.addAll([
+        Shortcut(
+          name: 'Google',
+          url: 'https://www.google.com',
+          icon: '🔍',
+          color: '0xFFFFB7B2',
+        ),
+        Shortcut(
+          name: 'YouTube',
+          url: 'https://www.youtube.com',
+          icon: '📺',
+          color: '0xFFFFE1AF',
+        ),
+        Shortcut(
+          name: 'Facebook',
+          url: 'https://www.facebook.com',
+          icon: '👥',
+          color: '0xFFB2E2F2',
+        ),
+        Shortcut(
+          name: 'Instagram',
+          url: 'https://www.instagram.com',
+          icon: '📸',
+          color: '0xFFE2B2F2',
+        ),
+        Shortcut(
+          name: 'Twitter',
+          url: 'https://www.twitter.com',
+          icon: '🐦',
+          color: '0xFFB2F2CC',
+        ),
+        Shortcut(
+          name: 'GitHub',
+          url: 'https://www.github.com',
+          icon: '💻',
+          color: '0xFFD1D1D1',
+        ),
+        Shortcut(
+          name: 'Join Office',
+          url: 'https://t.me/kun_amra',
+          icon: '📢',
+          color: '0xFFB2E2F2',
+        ),
+      ]);
+      _saveShortcuts();
+    }
+
     // Restore Tabs
     final savedUrls = prefs.getStringList('tabUrls');
     final savedIndex = prefs.getInt('currentIndex') ?? 0;
-    
+
     if (savedUrls != null && savedUrls.isNotEmpty) {
       final List<BrowserTab> newTabs = [];
       for (var url in savedUrls) {
-        newTabs.add(BrowserTab(
-          onStateChanged: () {
-            _saveTabs();
-            notifyListeners();
-          },
-          onPageLoaded: addToHistory,
-          onPlaybackEvent: _handlePlaybackEvent,
-          shouldBlockAds: () => _isAdBlockEnabled,
-          shouldEnableBackgroundPlay: () => _isBackgroundPlayEnabled,
-          shouldEnableDesktopMode: () => _isDesktopMode,
-        ));
+        newTabs.add(
+          BrowserTab(
+            onStateChanged: _handleTabStateChange,
+            onPageLoaded: addToHistory,
+            onPlaybackEvent: _handlePlaybackEvent,
+            shouldBlockAds: () => _isAdBlockEnabled,
+            shouldEnableBackgroundPlay: () => _isBackgroundPlayEnabled,
+            shouldEnableDesktopMode: () => _isDesktopMode,
+          ),
+        );
         if (url != "about:blank") {
           newTabs.last.loadUrl(url);
         }
       }
-      
+
       // Swap list atomically to avoid empty state crashes
       _tabs.clear();
       _tabs.addAll(newTabs);
       _currentIndex = savedIndex.clamp(0, _tabs.length - 1);
+    } else {
+      // If no tabs were saved, and we have a favorite URL, load it into the initial tab
+      if (_favoriteUrl.isNotEmpty) {
+        _tabs.first.loadUrl(_favoriteUrl);
+      }
     }
-    
+
     notifyListeners();
     initBackgroundMode();
   }
@@ -524,13 +668,13 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     _backgroundImagePath = path;
     notifyListeners();
   }
-  
+
   void toggleAdBlock(bool value) async {
     _isAdBlockEnabled = value;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isAdBlockEnabled', value);
-    reload(); 
+    reload();
   }
 
   void toggleBackgroundPlay(bool value) async {
@@ -541,7 +685,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isBackgroundPlayEnabled', value);
-    
+
     if (value) {
       await _enableBackgroundMode();
     } else {
@@ -572,7 +716,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isSafeBrowsingEnabled', value);
   }
-  
+
   void updateFavoriteUrl(String url) async {
     _favoriteUrl = url;
     notifyListeners();
@@ -596,7 +740,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         // Battery Optimization check
         if (await Permission.ignoreBatteryOptimizations.isDenied) {
-           await Permission.ignoreBatteryOptimizations.request();
+          await Permission.ignoreBatteryOptimizations.request();
         }
 
         bool hasPermissions = await FlutterBackground.hasPermissions;
@@ -623,21 +767,22 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> initBackgroundMode() async {
-     // Re-apply state on startup
-     if (_isBackgroundPlayEnabled) {
-       await _enableBackgroundMode();
-     }
+    // Re-apply state on startup
+    if (_isBackgroundPlayEnabled) {
+      await _enableBackgroundMode();
+    }
   }
+
   Future<void> requestNotificationPermission() async {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-       PermissionStatus status = await Permission.notification.status;
-       if (!status.isGranted) {
-         status = await Permission.notification.request();
-       }
-       
-       if (status.isGranted && _isBackgroundPlayEnabled) {
-         await _enableBackgroundMode();
-       }
+      PermissionStatus status = await Permission.notification.status;
+      if (!status.isGranted) {
+        status = await Permission.notification.request();
+      }
+
+      if (status.isGranted && _isBackgroundPlayEnabled) {
+        await _enableBackgroundMode();
+      }
     }
   }
 
@@ -650,11 +795,11 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     if (event['type'] == 'status') {
       bool playing = event['playing'] as bool;
       String title = event['title'] as String? ?? "Video";
-      
+
       if (playing != _isCurrentlyPlaying || title != _lastMediaTitle) {
         _isCurrentlyPlaying = playing;
         _lastMediaTitle = title;
-        
+
         if (playing) {
           NotificationService.showMediaNotification(
             id: 200,
@@ -666,15 +811,117 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
         }
       }
     } else if (event['type'] == 'metadata') {
-       String title = event['title'] as String? ?? _lastMediaTitle;
-       _lastMediaTitle = title;
-       if (_isCurrentlyPlaying) {
-          NotificationService.showMediaNotification(
-            id: 200,
-            title: "Cute Browser - Playing",
-            body: title,
-          );
-       }
+      String title = event['title'] as String? ?? _lastMediaTitle;
+      _lastMediaTitle = title;
+      if (_isCurrentlyPlaying) {
+        NotificationService.showMediaNotification(
+          id: 200,
+          title: "Cute Browser - Playing",
+          body: title,
+        );
+      }
     }
+  }
+
+  void removeShortcut(int index) {
+    if (index >= 0 && index < _shortcuts.length) {
+      _shortcuts.removeAt(index);
+      _saveShortcuts();
+      notifyListeners();
+    }
+  }
+
+  void _saveShortcuts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = _shortcuts.map((s) => jsonEncode(s.toJson())).toList();
+    await prefs.setStringList('shortcuts', jsonList);
+  }
+
+  void addShortcut(String name, String url, {String? icon}) {
+    final List<String> randomIcons = [
+      '✨',
+      '🍭',
+      '🌸',
+      '🎀',
+      '🧁',
+      '🦄',
+      '🍓',
+      '🌈',
+      '🍦',
+      '🍡',
+      '🦋',
+      '🎈',
+      '🎨',
+      '🎭',
+      '🧶',
+    ];
+    final List<String> randomColors = [
+      '0xFFFFB7B2', // Pastel Pink
+      '0xFFFFE1AF', // Pastel Orange
+      '0xFFB2E2F2', // Pastel Blue
+      '0xFFE2B2F2', // Pastel Purple
+      '0xFFB2F2CC', // Pastel Green
+      '0xFFD1D1D1', // Pastel Grey
+    ];
+
+    final random = Random();
+    final String chosenIcon = (icon == null || icon.trim().isEmpty)
+        ? randomIcons[random.nextInt(randomIcons.length)]
+        : icon.trim();
+
+    _shortcuts.add(
+      Shortcut(
+        name: name,
+        url: url,
+        icon: chosenIcon,
+        color: randomColors[random.nextInt(randomColors.length)],
+      ),
+    );
+    _saveShortcuts();
+    notifyListeners();
+  }
+
+  void restoreDefaultShortcuts() {
+    _shortcuts.clear();
+    _shortcuts.addAll([
+      Shortcut(
+        name: 'Google',
+        url: 'https://www.google.com',
+        icon: '🔍',
+        color: '0xFFFFB7B2',
+      ),
+      Shortcut(
+        name: 'YouTube',
+        url: 'https://www.youtube.com',
+        icon: '📺',
+        color: '0xFFFFE1AF',
+      ),
+      Shortcut(
+        name: 'Facebook',
+        url: 'https://www.facebook.com',
+        icon: '👥',
+        color: '0xFFB2E2F2',
+      ),
+      Shortcut(
+        name: 'Instagram',
+        url: 'https://www.instagram.com',
+        icon: '📸',
+        color: '0xFFE2B2F2',
+      ),
+      Shortcut(
+        name: 'Twitter',
+        url: 'https://www.twitter.com',
+        icon: '🐦',
+        color: '0xFFB2F2CC',
+      ),
+      Shortcut(
+        name: 'Join Office',
+        url: 'https://t.me/kun_amra',
+        icon: '📢',
+        color: '0xFFB5EAD7',
+      ),
+    ]);
+    _saveShortcuts();
+    notifyListeners();
   }
 }

@@ -39,15 +39,21 @@ class _AiChatScreenState extends State<AiChatScreen> {
     });
     _scrollToBottom();
 
-    final browserProvider = Provider.of<BrowserProvider>(context, listen: false);
+    final browserProvider = Provider.of<BrowserProvider>(
+      context,
+      listen: false,
+    );
     String? contextText;
-    
+
     // Only fetch context if it's the first message or explicitly asked
     if (_messages.length <= 2) {
       contextText = await browserProvider.getPageContent();
     }
 
-    final response = await AiService.sendMessage(text, pageContext: contextText);
+    final response = await AiService.sendMessage(
+      text,
+      pageContext: contextText,
+    );
 
     if (mounted) {
       setState(() {
@@ -65,19 +71,16 @@ class _AiChatScreenState extends State<AiChatScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Cute Assistant ✨", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Cute Assistant ✨",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.grey),
-            onPressed: () => _showApiKeyDialog(),
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -90,14 +93,21 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final msg = _messages[index];
-                      return _buildChatBubble(msg["role"] == "user", msg["text"]!, themeColor);
+                      return _buildChatBubble(
+                        msg["role"] == "user",
+                        msg["text"]!,
+                        themeColor,
+                      );
                     },
                   ),
           ),
           if (_isTyping)
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text("Cute Assistant is thinking... 🎀", style: TextStyle(color: themeColor, fontSize: 12)),
+              child: Text(
+                "Cute Assistant is thinking... 🎀",
+                style: TextStyle(color: themeColor, fontSize: 12),
+              ),
             ),
           _buildInputArea(themeColor),
         ],
@@ -143,7 +153,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
         decoration: BoxDecoration(
           color: isUser ? themeColor : Colors.grey[100],
           borderRadius: BorderRadius.only(
@@ -170,7 +182,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
         ],
       ),
       child: Row(
@@ -203,45 +219,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
               ),
               child: const Icon(Icons.send, color: Colors.white, size: 20),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showApiKeyDialog() {
-    final TextEditingController keyController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Gemini API Key ✨"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("To use the AI, please enter your Gemini API key from AI Studio."),
-            const SizedBox(height: 16),
-            TextField(
-              controller: keyController,
-              decoration: const InputDecoration(
-                hintText: "Enter API Key",
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-          ElevatedButton(
-            onPressed: () {
-              if (keyController.text.isNotEmpty) {
-                AiService.setApiKey(keyController.text);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("API Key saved! 💖")),
-                );
-              }
-            },
-            child: const Text("Save"),
           ),
         ],
       ),

@@ -10,18 +10,20 @@ import 'download_service.dart';
 
 class UpdateService {
   // Replace this with your actual server URL
-  static const String _updateUrl = "https://raw.githubusercontent.com/kun-amra/cute_browser/main/update.json";
+  static const String _updateUrl =
+      "https://raw.githubusercontent.com/kun-amra/cute_browser/main/update.json";
 
   static Future<void> checkAndPromptUpdate(BuildContext context) async {
     try {
       final dio = Dio();
       final response = await dio.get(_updateUrl);
-      
+
       if (response.statusCode == 200) {
         final data = response.data;
         final latestVersion = data['latest_version'] as String;
         final downloadUrl = data['download_url'] as String;
-        final releaseNotes = data['release_notes'] as String? ?? "New version available!";
+        final releaseNotes =
+            data['release_notes'] as String? ?? "New version available!";
 
         final packageInfo = await PackageInfo.fromPlatform();
         final currentVersion = packageInfo.version;
@@ -39,12 +41,8 @@ class UpdateService {
     } catch (e) {
       debugPrint("Update check failed: $e");
       if (!context.mounted) return;
-      // Fallback for demo or if server is not ready
-      _showUpdateDialog(
-        context, 
-        "2.1.0", 
-        "https://example.com/cute_browser.apk", 
-        "Testing auto-download feature... 💖"
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Could not check for updates: $e ❌")),
       );
     }
   }
@@ -54,14 +52,19 @@ class UpdateService {
     List<int> latestParts = latest.split('.').map(int.parse).toList();
 
     for (var i = 0; i < latestParts.length; i++) {
-       int c = i < currentParts.length ? currentParts[i] : 0;
-       if (latestParts[i] > c) return true;
-       if (latestParts[i] < c) return false;
+      int c = i < currentParts.length ? currentParts[i] : 0;
+      if (latestParts[i] > c) return true;
+      if (latestParts[i] < c) return false;
     }
     return false;
   }
 
-  static void _showUpdateDialog(BuildContext context, String version, String url, String notes) {
+  static void _showUpdateDialog(
+    BuildContext context,
+    String version,
+    String url,
+    String notes,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -72,7 +75,10 @@ class UpdateService {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("What's new:", style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              "What's new:",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             Text(notes),
             const SizedBox(height: 16),
@@ -89,23 +95,37 @@ class UpdateService {
               Navigator.pop(context);
               _startDownload(context, url, version);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: CuteColors.pastelPink),
-            child: const Text("Download & Install", style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: CuteColors.pastelPink,
+            ),
+            child: const Text(
+              "Download & Install",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
     );
   }
 
-  static Future<void> _startDownload(BuildContext context, String url, String version) async {
+  static Future<void> _startDownload(
+    BuildContext context,
+    String url,
+    String version,
+  ) async {
     final dio = Dio();
     final cancelToken = CancelToken();
     const int updateNotificationId = 100;
     final String fileName = "Cute Browser v$version (Update)";
-    
-    DownloadService.registerActiveDownload(updateNotificationId, cancelToken, fileName: fileName);
 
-    final tempDir = await getExternalStorageDirectory() ?? await getTemporaryDirectory();
+    DownloadService.registerActiveDownload(
+      updateNotificationId,
+      cancelToken,
+      fileName: fileName,
+    );
+
+    final tempDir =
+        await getExternalStorageDirectory() ?? await getTemporaryDirectory();
     final savePath = "${tempDir.path}/cute_browser_v$version.apk";
 
     if (!context.mounted) return;
@@ -118,7 +138,9 @@ class UpdateService {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               title: const Text("Downloading Update... 📥"),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -126,7 +148,9 @@ class UpdateService {
                   LinearProgressIndicator(
                     value: progress,
                     backgroundColor: Colors.grey[200],
-                    valueColor: AlwaysStoppedAnimation<Color>(CuteColors.softPurple),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      CuteColors.softPurple,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text("${(progress * 100).toInt()}%"),
@@ -147,12 +171,12 @@ class UpdateService {
         onReceiveProgress: (count, total) {
           if (total != -1) {
             int currentProgress = (count / total * 100).toInt();
-            
+
             // Update the dialog UI if it's still showing
             // We use a workaround to pass state out of the builder
             if (currentProgress != lastProgress) {
               lastProgress = currentProgress;
-              
+
               // Note: In a real app, you'd use a more robust state management
               // but for this simple service we can use late binding or a stream.
               // For now, let's just focus on the notification as requested.
@@ -169,17 +193,19 @@ class UpdateService {
 
       NotificationService.cancel(updateNotificationId);
       DownloadService.unregisterActiveDownload(updateNotificationId);
-      
+
       // Save to download history
-      await DownloadService.saveToHistory(DownloadItem(
-        fileName: "Cute Browser v$version (Update)",
-        url: url,
-        path: savePath,
-        date: DateTime.now(),
-      ));
-      
+      await DownloadService.saveToHistory(
+        DownloadItem(
+          fileName: "Cute Browser v$version (Update)",
+          url: url,
+          path: savePath,
+          date: DateTime.now(),
+        ),
+      );
+
       if (!context.mounted) return;
-      
+
       final result = await OpenFile.open(savePath);
       if (result.type != ResultType.done) {
         throw Exception(result.message);
@@ -192,9 +218,9 @@ class UpdateService {
       }
       if (context.mounted) {
         Navigator.pop(context); // Close download dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Download failed: $e ❌")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Download failed: $e ❌")));
       }
     }
   }

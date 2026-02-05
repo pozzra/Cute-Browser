@@ -14,12 +14,42 @@ class _HomeDashboardState extends State<HomeDashboard> {
   final TextEditingController _searchController = TextEditingController();
 
   final List<Map<String, String>> shortcuts = [
-    {'name': 'Google', 'url': 'https://www.google.com', 'icon': '🔍', 'color': '0xFFFFB7B2'},
-    {'name': 'YouTube', 'url': 'https://www.youtube.com', 'icon': '📺', 'color': '0xFFFFE1AF'},
-    {'name': 'Facebook', 'url': 'https://www.facebook.com', 'icon': '👥', 'color': '0xFFB2E2F2'},
-    {'name': 'Instagram', 'url': 'https://www.instagram.com', 'icon': '📸', 'color': '0xFFE2B2F2'},
-    {'name': 'Twitter', 'url': 'https://www.twitter.com', 'icon': '🐦', 'color': '0xFFB2F2CC'},
-    {'name': 'GitHub', 'url': 'https://www.github.com', 'icon': '💻', 'color': '0xFFD1D1D1'},
+    {
+      'name': 'Google',
+      'url': 'https://www.google.com',
+      'icon': '🔍',
+      'color': '0xFFFFB7B2',
+    },
+    {
+      'name': 'YouTube',
+      'url': 'https://www.youtube.com',
+      'icon': '📺',
+      'color': '0xFFFFE1AF',
+    },
+    {
+      'name': 'Facebook',
+      'url': 'https://www.facebook.com',
+      'icon': '👥',
+      'color': '0xFFB2E2F2',
+    },
+    {
+      'name': 'Instagram',
+      'url': 'https://www.instagram.com',
+      'icon': '📸',
+      'color': '0xFFE2B2F2',
+    },
+    {
+      'name': 'Twitter',
+      'url': 'https://www.twitter.com',
+      'icon': '🐦',
+      'color': '0xFFB2F2CC',
+    },
+    {
+      'name': 'GitHub',
+      'url': 'https://www.github.com',
+      'icon': '💻',
+      'color': '0xFFD1D1D1',
+    },
   ];
 
   @override
@@ -59,7 +89,9 @@ class _HomeDashboardState extends State<HomeDashboard> {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: browserProvider.adaptiveTextColor == Colors.white ? Colors.white : browserProvider.themeColor,
+                    color: browserProvider.adaptiveTextColor == Colors.white
+                        ? Colors.white
+                        : browserProvider.themeColor,
                     fontFamily: 'Outfit',
                     letterSpacing: 1.2,
                   ),
@@ -70,10 +102,11 @@ class _HomeDashboardState extends State<HomeDashboard> {
             Text(
               "Spread a little sparkle today! ✨",
               style: TextStyle(
-                color: browserProvider.adaptiveTextColor == Colors.white 
-                  ? Colors.white70 
-                  : CuteColors.lightText, 
-                fontSize: 14),
+                color: browserProvider.adaptiveTextColor == Colors.white
+                    ? Colors.white70
+                    : CuteColors.lightText,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 48),
 
@@ -95,7 +128,10 @@ class _HomeDashboardState extends State<HomeDashboard> {
                 onSubmitted: _onSearch,
                 decoration: InputDecoration(
                   hintText: "Search anything cute...",
-                  prefixIcon: Icon(Icons.search_rounded, color: browserProvider.themeColor),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: browserProvider.themeColor,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide.none,
@@ -106,9 +142,15 @@ class _HomeDashboardState extends State<HomeDashboard> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: browserProvider.themeColor.withValues(alpha: 0.5), width: 1.5),
+                    borderSide: BorderSide(
+                      color: browserProvider.themeColor.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 15,
+                  ),
                 ),
               ),
             ),
@@ -136,39 +178,71 @@ class _HomeDashboardState extends State<HomeDashboard> {
                 mainAxisSpacing: 24,
                 childAspectRatio: 0.9,
               ),
-              itemCount: shortcuts.length,
+              itemCount: browserProvider.shortcuts.length,
               itemBuilder: (context, index) {
-                final shortcut = shortcuts[index];
-                final color = Color(int.parse(shortcut['color']!));
+                final shortcut = browserProvider.shortcuts[index];
+                final color = Color(int.parse(shortcut.color));
 
                 return GestureDetector(
-                  onTap: () => browserProvider.loadUrl(shortcut['url']!),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(10),
+                  onTap: () => browserProvider.loadUrl(shortcut.url),
+                  onLongPress: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Remove Shortcut?"),
+                        content: Text(
+                          "Do you want to remove ${shortcut.name}?",
                         ),
-                        child: Center(
-                          child: Text(
-                            shortcut['icon']!,
-                            style: const TextStyle(fontSize: 28),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text("Cancel"),
                           ),
-                        ),
+                          TextButton(
+                            onPressed: () {
+                              browserProvider.removeShortcut(index);
+                              Navigator.pop(context);
+                            },
+                            child: const Text(
+                              "Remove",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        shortcut['name']!,
-                        style: TextStyle(
-                          fontSize: 12, 
-                          color: browserProvider.adaptiveTextColor,
-                          fontWeight: FontWeight.w500
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    );
+                  },
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Column(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text(
+                                shortcut.icon,
+                                style: const TextStyle(fontSize: 28),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            shortcut.name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: browserProvider.adaptiveTextColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ],
                   ),

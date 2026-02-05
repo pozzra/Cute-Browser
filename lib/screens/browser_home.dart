@@ -40,11 +40,17 @@ class _BrowserHomeState extends State<BrowserHome> {
               Navigator.pop(context);
               provider.goHome(); // Safe exit
             },
-            child: const Text("Leave Website", style: TextStyle(color: Colors.blue)),
+            child: const Text(
+              "Leave Website",
+              style: TextStyle(color: Colors.blue),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Proceed Anyway", style: TextStyle(color: Colors.red)),
+            child: const Text(
+              "Proceed Anyway",
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -57,8 +63,8 @@ class _BrowserHomeState extends State<BrowserHome> {
 
     // Security Interceptor Logic
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (browserProvider.isSafeBrowsingEnabled && 
-          !browserProvider.isSecureSite && 
+      if (browserProvider.isSafeBrowsingEnabled &&
+          !browserProvider.isSecureSite &&
           !browserProvider.currentTab.isHomePage &&
           browserProvider.currentUrl != "about:blank" &&
           browserProvider.currentUrl != _lastWarnedUrl) {
@@ -97,7 +103,9 @@ class _BrowserHomeState extends State<BrowserHome> {
                   ),
                   child: browserProvider.tabs.isEmpty
                       ? Container(
-                          color: browserProvider.themeColor.withValues(alpha: 0.1),
+                          color: browserProvider.themeColor.withValues(
+                            alpha: 0.1,
+                          ),
                           child: Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -133,6 +141,43 @@ class _BrowserHomeState extends State<BrowserHome> {
               ),
             ],
           ),
+          if (browserProvider.isAppStarting &&
+              browserProvider.isLoading &&
+              browserProvider.tabs.isNotEmpty &&
+              !browserProvider.currentTab.isHomePage)
+            Container(
+              color: Colors.black,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(25),
+                      child: Image.asset(
+                        'assets/image/logo.png',
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    CircularProgressIndicator(
+                      color: browserProvider.themeColor,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      "Loading...",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: const BottomControls(),
