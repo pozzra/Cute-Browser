@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cute Browser - The Cutest Way to Surf</title>
+    <link
+      rel="shortcut icon"
+      href="/assets/Image/logo.png"
+      type="image/x-icon"
+    />
     <meta
       name="description"
       content="Experience the web like never before with Cute Browser. Ad-free, background play, and undeniably cute."
@@ -23,10 +28,25 @@
   </head>
   <body>
     <nav class="glass-nav">
-      <div class="logo"><span class="logo-emoji">🌸</span> Cute Browser</div>
+      <div class="logo">
+        <span class="logo-emoji"
+          ><img
+            style="width: 50px; height: 50px; border-radius: 50%"
+            src="/assets/Image/logo.png"
+            alt=""
+        /></span>
+        Cute Browser
+      </div>
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#about">About</a>
+        <button
+          id="theme-toggle"
+          class="theme-btn"
+          aria-label="Toggle Dark Mode"
+        >
+          <i class="fas fa-moon"></i>
+        </button>
         <a href="#download" class="btn-primary">Download App</a>
       </div>
     </nav>
@@ -41,10 +61,13 @@
           Background play included!
         </p>
         <div class="cta-group fade-in-up delay-400">
-          <a href="#download" class="btn-primary-lg"
+          <a
+            href="javascript:void(0)"
+            onclick="iosAlert()"
+            class="btn-primary-lg"
             ><i class="fab fa-apple"></i> iOS Download</a
           >
-          <a href="#download" class="btn-secondary-lg"
+          <a href="CuteBrowser.apk" download class="btn-secondary-lg"
             ><i class="fab fa-android"></i> Android APK</a
           >
         </div>
@@ -110,14 +133,14 @@
         <h2>Get Started Today</h2>
         <p>Join thousands of users surfing the cute web.</p>
         <div class="download-buttons">
-          <a href="#" class="store-btn">
+          <a href="javascript:void(0)" onclick="iosAlert()" class="store-btn">
             <i class="fab fa-apple"></i>
             <div class="btn-text">
               <span>Download on the</span>
               <strong>App Store</strong>
             </div>
           </a>
-          <a href="#" class="store-btn android">
+          <a href="CuteBrowser.apk" download class="store-btn android">
             <i class="fab fa-google-play"></i>
             <div class="btn-text">
               <span>Get it on</span>
