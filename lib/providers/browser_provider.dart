@@ -24,6 +24,7 @@ class BrowserTab {
   bool canGoForward = false;
   bool isHomePage = true;
   String title = "Home";
+  bool isPlaying = false;
 
   // Callback to notify the provider when state changes in this tab
   final VoidCallback onStateChanged;
@@ -153,6 +154,9 @@ class BrowserTab {
         onMessageReceived: (JavaScriptMessage message) {
           try {
             final data = jsonDecode(message.message);
+            if (data['type'] == 'status') {
+              isPlaying = data['playing'] ?? false;
+            }
             onPlaybackEvent(data);
           } catch (e) {
             debugPrint("Error parsing playback message: $e");
@@ -224,6 +228,7 @@ class BrowserTab {
   }
 
   void resumeMedia() {
+    if (!isPlaying) return;
     if (shouldEnableBackgroundPlay != null && shouldEnableBackgroundPlay!()) {
       controller.runJavaScript(
         "if(typeof syncAllVideos === 'function') syncAllVideos();",
@@ -366,9 +371,11 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
         }
       }
     } else if (state == AppLifecycleState.resumed) {
-      // When coming back to foreground, we don't force play.
-      // The user will decide or the script will sync if needed.
-      // This prevents "un-pausing" when the user just returns to the app.
+      // When coming back to foreground, disable background service (hides notification)
+      // The WebView is now active in foreground, so we don't need the service.
+      if (_isBackgroundPlayEnabled) {
+        _disableBackgroundMode();
+      }
     }
   }
 
