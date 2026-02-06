@@ -32,7 +32,7 @@
         <span class="logo-emoji"
           ><img
             style="width: 50px; height: 50px; border-radius: 50%"
-            src="/assets/Image/logo.png"
+            src="/assets/images/logo.png"
             alt=""
         /></span>
         Cute Browser
@@ -40,13 +40,6 @@
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#about">About</a>
-        <button
-          id="theme-toggle"
-          class="theme-btn"
-          aria-label="Toggle Dark Mode"
-        >
-          <i class="fas fa-moon"></i>
-        </button>
         <a href="#download" class="btn-primary">Download App</a>
       </div>
     </nav>
@@ -76,13 +69,15 @@
         <div class="phone-mockup floating">
           <div class="screen">
             <!-- Placeholder for App Screenshot -->
-            <div class="app-screen-placeholder">
-              <div class="app-header"></div>
-              <div class="app-body">
-                <div class="video-card"></div>
-                <div class="video-card"></div>
-              </div>
-            </div>
+            <img
+              src="/assets/images/app-preview.jpg"
+              alt="Cute Browser App Preview"
+              onerror="
+                this.onerror = null;
+                this.src =
+                  'https://placehold.co/300x600?text=App+Preview+Coming+Soon';
+              "
+            />
           </div>
         </div>
         <div class="blob blob-1"></div>
@@ -155,7 +150,7 @@
     <footer>
       <div class="footer-content">
         <div class="footer-brand">
-          <span>🌸 Cute Browser</span>
+          <span class="logo-emoji">Cute Browser</span>
         </div>
         <div class="social-links">
           <a href="#"><i class="fab fa-twitter"></i></a>

@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "name": "cute-browser-landing",
   "cleanUrls": true,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/(.*)",
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "source": "/(styles.css|script.js|assets/.*)",
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
