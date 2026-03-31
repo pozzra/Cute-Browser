@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../providers/browser_provider.dart';
-import '../theme/colors.dart';
 import '../screens/history_screen.dart';
 import '../screens/bookmarks_screen.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../services/update_service.dart';
 import '../screens/downloads_screen.dart';
 
@@ -143,14 +141,14 @@ class CuteMenuOverlay extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded),
+                    icon: Icon(Icons.arrow_back_rounded, color: textColor),
                     onPressed: () {
                       browserProvider.goBack();
                       Navigator.pop(context);
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.share_outlined),
+                    icon: Icon(Icons.share_outlined, color: textColor),
                     onPressed: () {
                       final url = browserProvider.currentUrl;
                       final title = browserProvider.currentTitle;
@@ -161,7 +159,7 @@ class CuteMenuOverlay extends StatelessWidget {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.download_rounded),
+                    icon: Icon(Icons.download_rounded, color: textColor),
                     onPressed: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -173,7 +171,7 @@ class CuteMenuOverlay extends StatelessWidget {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.refresh_rounded),
+                    icon: Icon(Icons.refresh_rounded, color: textColor),
                     onPressed: () {
                       browserProvider.reload();
                       Navigator.pop(context);

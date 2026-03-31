@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../providers/browser_provider.dart';
-import '../theme/colors.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/bottom_controls.dart';
 import '../widgets/home_dashboard.dart';

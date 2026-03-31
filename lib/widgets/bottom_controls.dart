@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/browser_provider.dart';
-import '../theme/colors.dart';
 import '../screens/tabs_screen.dart';
 import 'cute_menu_overlay.dart';
 
