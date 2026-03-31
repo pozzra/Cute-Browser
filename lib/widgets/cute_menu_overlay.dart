@@ -15,8 +15,10 @@ class CuteMenuOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final browserProvider = Provider.of<BrowserProvider>(context);
-    final backgroundColor = Colors.white;
-    final dividerColor = Colors.grey[200];
+    final theme = Theme.of(context);
+    final backgroundColor = theme.colorScheme.surface;
+    final dividerColor = theme.dividerColor;
+    final textColor = theme.colorScheme.onSurface;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -79,7 +81,6 @@ class CuteMenuOverlay extends StatelessWidget {
             ),
             Divider(color: dividerColor),
             // Expanded Settings Section
-            _buildThemeColorSelector(context),
             _buildThemeModeSelector(context),
             _buildToggleItem(
               context,
@@ -198,12 +199,13 @@ class CuteMenuOverlay extends StatelessWidget {
     Widget? trailing,
     VoidCallback? onTap,
   }) {
-    final itemTextColor = textColor ?? CuteColors.darkText;
+    final theme = Theme.of(context);
+    final itemTextColor = textColor ?? theme.colorScheme.onSurface;
 
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
             Icon(icon, color: itemTextColor, size: 20),
@@ -211,7 +213,7 @@ class CuteMenuOverlay extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(color: itemTextColor, fontSize: 14),
+                style: TextStyle(color: itemTextColor, fontSize: 13),
               ),
             ),
             if (shortcut != null)
@@ -243,23 +245,26 @@ class CuteMenuOverlay extends StatelessWidget {
       context,
       listen: false,
     );
+    final theme = Theme.of(context);
+    final textColor = theme.colorScheme.onSurface;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
       child: Row(
         children: [
-          Icon(icon, color: CuteColors.darkText, size: 20),
+          Icon(icon, color: textColor, size: 20),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(color: CuteColors.darkText, fontSize: 14),
+              style: TextStyle(color: textColor, fontSize: 13),
             ),
           ),
           Text(
             value ? "On" : "Off",
             style: TextStyle(
               color: value ? browserProvider.themeColor : Colors.grey[500],
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -280,118 +285,26 @@ class CuteMenuOverlay extends StatelessWidget {
     );
   }
 
-  Widget _buildThemeColorSelector(BuildContext context) {
-    final browserProvider = Provider.of<BrowserProvider>(context);
-    final List<Color> themeColors = [
-      CuteColors.pastelPink,
-      CuteColors.mintGreen,
-      CuteColors.lavender,
-      CuteColors.softPurple,
-      Colors.blueAccent.withValues(alpha: 0.5),
-      Colors.orangeAccent.withValues(alpha: 0.5),
-      Colors.tealAccent.withValues(alpha: 0.5),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Theme Color",
-            style: TextStyle(
-              color: CuteColors.darkText,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                ...themeColors.map((color) {
-                  final isSelected = browserProvider.themeColor == color;
-                  return GestureDetector(
-                    onTap: () => browserProvider.updateThemeColor(color),
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: isSelected
-                            ? Border.all(color: Colors.black54, width: 2)
-                            : null,
-                      ),
-                    ),
-                  );
-                }),
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Pick a color!'),
-                        content: SingleChildScrollView(
-                          child: ColorPicker(
-                            pickerColor: browserProvider.themeColor,
-                            onColorChanged: (color) =>
-                                browserProvider.updateThemeColor(color),
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Done'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Colors.red, Colors.blue, Colors.green],
-                      ),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey[300]!, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.colorize,
-                      size: 14,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildThemeModeSelector(BuildContext context) {
     final browserProvider = Provider.of<BrowserProvider>(context);
+    final theme = Theme.of(context);
+    final textColor = theme.colorScheme.onSurface;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             "Theme Mode",
             style: TextStyle(
-              color: CuteColors.darkText,
+              color: textColor,
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -437,7 +350,7 @@ class CuteMenuOverlay extends StatelessWidget {
         onTap: onTap,
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: isSelected ? themeColor.withValues(alpha: 0.15) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
@@ -453,11 +366,11 @@ class CuteMenuOverlay extends StatelessWidget {
                 color: isSelected ? themeColor : Colors.grey[600],
                 size: 20,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: isSelected ? themeColor : Colors.grey[600],
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),

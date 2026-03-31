@@ -190,11 +190,9 @@ class BrowserTab {
     final headers = <String, String>{};
 
     if (isGoogleLogin) {
-      // Chrome Android package name - Google trusts this
+      // Chrome Android package name - Google trusts this for login
       headers["X-Requested-With"] = "com.android.chrome";
       controller.setUserAgent(desktopUserAgent);
-    } else if (url.contains("google.com") || url.contains("youtube.com")) {
-      headers["X-Requested-With"] = "com.android.chrome";
     }
 
     controller.loadRequest(Uri.parse(url), headers: headers);

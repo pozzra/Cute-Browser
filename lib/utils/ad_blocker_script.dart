@@ -30,11 +30,16 @@ const String adBlockerScript = """
     // Force forward video if it's an unskippable ad
     const video = document.querySelector('video');
     const adBeingShown = document.querySelector('.ad-showing') || 
-                        document.querySelector('.ytp-ad-player-overlay');
-    if (video && adBeingShown) {
-       if (video.duration > 0 && !isNaN(video.duration)) {
-          video.currentTime = video.duration;
-       }
+                        document.querySelector('.ytp-ad-player-overlay') || 
+                        document.querySelector('.ytp-ad-visit-advertiser-button');
+    if (video && adBeingShown && (video.duration > 0 && !isNaN(video.duration))) {
+        // Double check this is not a main video
+        const isActuallyAd = document.querySelector('.ytp-ad-text') || 
+                            document.querySelector('.ytp-ad-preview-text') ||
+                            document.querySelector('.ytp-ad-skip-button');
+        if (isActuallyAd) {
+           video.currentTime = video.duration;
+        }
     }
   }
 
