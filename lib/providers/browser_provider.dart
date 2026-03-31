@@ -332,11 +332,19 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool get canGoForward => _tabs.isEmpty ? false : currentTab.canGoForward;
   String get currentTitle => _tabs.isEmpty ? "" : currentTab.title;
 
+  Timer? _saveTimer;
+  void _debounceSave() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(seconds: 2), () {
+      _saveTabs();
+    });
+  }
+
   void _handleTabStateChange() {
     if (_isAppStarting && !isLoading) {
       _isAppStarting = false;
     }
-    _saveTabs();
+    _debounceSave();
     notifyListeners();
   }
 
@@ -795,50 +803,52 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     try {
       // 1. Audio Session Request & Interruption Handling
       final session = await AudioSession.instance;
+      // Use 'speech' or 'music' configuration. 'music' is better for YouTube/Streaming.
       await session.configure(const AudioSessionConfiguration.music());
       
-      // Cancel previous subscription if any
       await _interruptionSubscription?.cancel();
-      
-      // Listen for interruptions (e.g. phone calls, other apps playing music)
       _interruptionSubscription = session.interruptionEventStream.listen((event) {
         if (event.begin) {
           switch (event.type) {
             case AudioInterruptionType.pause:
             case AudioInterruptionType.unknown:
-              // System managed, WebView handles standard pause via media session
+              // Mobile OS requested pause, WebView manages this via MediaSession
               break;
             case AudioInterruptionType.duck:
-              // Standard ducking handled by OS
+              // Lower volume (handled by OS)
               break;
           }
         } else {
-          // Interruption ended, resume if it was a pause
           if (event.type == AudioInterruptionType.pause) {
-            for (var tab in _tabs) {
-               tab.resumeMedia();
-            }
+            // Re-activate session and resume all videos after interruption ends
+            session.setActive(true).then((_) {
+               for (var tab in _tabs) {
+                  tab.resumeMedia();
+               }
+            });
           }
         }
       });
 
       if (await session.setActive(true)) {
-        debugPrint("Audio session activated successfully.");
+        debugPrint("CuteBrowser: Audio session activated.");
       }
 
-      // 2. Start Foreground Service (Android)
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-        // Battery Optimization check
-        if (await Permission.ignoreBatteryOptimizations.isDenied) {
-          await Permission.ignoreBatteryOptimizations.request();
-        }
+      // 2. Start Foreground Service & Keep Alive (Mobile Only)
+      if (!kIsWeb) {
+        // Prevent CPU Sleep
+        await WakelockPlus.enable();
 
-        bool hasPermissions = await FlutterBackground.hasPermissions;
-        if (hasPermissions) {
-          // If already enabled, it doesn't hurt to call again to ensure it's robust
-          await FlutterBackground.enableBackgroundExecution();
-        } else {
-          debugPrint("Background permissions not granted yet.");
+        if (defaultTargetPlatform == TargetPlatform.android) {
+          // Request battery optimization ignore to prevent 5-min killing
+          if (await Permission.ignoreBatteryOptimizations.isDenied) {
+            await Permission.ignoreBatteryOptimizations.request();
+          }
+
+          if (await FlutterBackground.hasPermissions) {
+            await FlutterBackground.enableBackgroundExecution();
+            debugPrint("CuteBrowser: Android Background Mode Enabled (Foreground Service)");
+          }
         }
       }
     } catch (e) {

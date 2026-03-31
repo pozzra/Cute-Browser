@@ -17,6 +17,27 @@ const String backgroundPlayScript = """
     } catch(e) {}
   };
 
+  // 1. Silent Web Audio Loop (Prevents 5-minute throttle)
+  let audioCtx;
+  const startKeepAlive = () => {
+     if (audioCtx) return;
+     try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) {
+        audioCtx = new AC();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.001; // Extremely low but not zero to keep pipeline active
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(0);
+        console.log("CuteBrowser: Silent Web Audio loop active.");
+      }
+    } catch (e) {
+      console.warn("CuteBrowser: Failed to init Web Audio loop", e);
+    }
+  };
+
   if (typeof window.IntersectionObserver !== 'undefined') {
     window.IntersectionObserver = class {
       constructor(callback) { this.callback = callback; }
@@ -30,33 +51,14 @@ const String backgroundPlayScript = """
     };
   }
 
-  if (window.AudioContext || window.webkitAudioContext) {
-    const OriginalAC = window.AudioContext || window.webkitAudioContext;
-    window.AudioContext = window.webkitAudioContext = function() {
-      const ac = new OriginalAC();
-      Object.defineProperty(ac, 'state', { get: function() { return 'running'; } });
-      
-      // Silent Loop: Keeps the AudioContext pipeline alive even when there's no active media.
-      // This is crucial for background playback on many Android devices.
-      try {
-        const oscillator = ac.createOscillator();
-        const gainNode = ac.createGain();
-        gainNode.gain.value = 0.001; // Extremely low but not zero
-        oscillator.connect(gainNode);
-        gainNode.connect(ac.destination);
-        oscillator.start(0);
-      } catch(e) { console.log("CuteBrowser: Silent loop init failed", e); }
-      
-      return ac;
-    };
-  }
-
   let userPaused = false;
   let lastUserAction = 0;
   
-  // Capture more events, especially pointer events the modern players use
   ['click', 'touchstart', 'mousedown', 'keydown', 'touchend', 'scroll', 'touchmove', 'pointerdown', 'pointerup', 'pointermove'].forEach(name => {
-    window.addEventListener(name, () => { lastUserAction = Date.now(); }, { capture: true, passive: true });
+    window.addEventListener(name, () => { 
+      lastUserAction = Date.now(); 
+      startKeepAlive();
+    }, { capture: true, passive: true });
   });
 
   const forcePlay = (v) => {
@@ -67,34 +69,27 @@ const String backgroundPlayScript = """
   };
 
   const sync = () => {
-    applyMocks();
     const videos = document.querySelectorAll('video, audio');
     videos.forEach(v => {
       if (!v._notiAttached) {
         v.addEventListener('play', () => { 
-           // If it plays, and there was a recent user action, consider it user-initiated
            if (Date.now() - lastUserAction < 5000) userPaused = false; 
         });
         v.addEventListener('pause', () => {
-          // If paused by a user action, respect it
           if (Date.now() - lastUserAction < 5000) {
             userPaused = true;
           } else {
-            // Delay force play slightly to avoid racing with site logic
             setTimeout(() => { if(!userPaused) forcePlay(v); }, 150);
           }
         });
         v.addEventListener('ratechange', () => forcePlay(v));
-        // Also listen for ended to avoid infinite loop restarting a finished video
         v.addEventListener('ended', () => {
           if (document.title.includes('YouTube') && !userPaused) {
-             // YouTube next may need a push
              setTimeout(() => sync(), 1000);
           }
         });
         v._notiAttached = true;
       }
-      // Do not force play on every sync tick if user paused it
       if (!userPaused) {
         forcePlay(v);
       }
@@ -117,7 +112,6 @@ const String backgroundPlayScript = """
     window.addEventListener(name, (e) => { 
       e.stopImmediatePropagation(); 
       applyMocks();
-      // Only force play on visibility changes if the user didn't pause before backgrounding
       if (!userPaused) sync(); 
     }, true);
   });
@@ -126,7 +120,6 @@ const String backgroundPlayScript = """
     navigator.mediaSession.setActionHandler('play', () => { userPaused = false; sync(); });
     navigator.mediaSession.setActionHandler('pause', () => { userPaused = true; document.querySelectorAll('video, audio').forEach(v => v.pause()); });
     
-    // Attempt to keep MediaSession alive even if silenced
     const updateMeta = () => {
       if (!navigator.mediaSession) return;
       let title = document.title.replace(' - YouTube', '');
@@ -156,13 +149,10 @@ const String backgroundPlayScript = """
   }
 
   window.syncAllVideos = sync;
-  
-  // Faster interval for core sync, though browser will throttle this to ~1min in background anyway.
-  // The silent loop helps prevent the engine from totally suspending.
   setInterval(sync, 3000); 
 
   applyMocks();
   sync();
-  console.log("CuteBrowser: Background Play (v14 Silent Loop) Active");
+  console.log("CuteBrowser: Background Play (v15 Keep-Alive) Active");
 })();
 """;
