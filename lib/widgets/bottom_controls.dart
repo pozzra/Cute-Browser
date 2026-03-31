@@ -11,21 +11,27 @@ class BottomControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final browserProvider = Provider.of<BrowserProvider>(context);
+    final theme = Theme.of(context);
+    final backgroundColor = theme.colorScheme.surface;
+    final iconColor = theme.colorScheme.onSurface;
+    final secondaryIconColor = theme.colorScheme.onSurface.withValues(alpha: 0.5);
 
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black12,
+              color: theme.brightness == Brightness.light 
+                  ? Colors.black12 
+                  : Colors.white.withValues(alpha: 0.05),
               blurRadius: 10,
-              offset: Offset(0, -5),
+              offset: const Offset(0, -5),
             ),
           ],
         ),
@@ -37,19 +43,19 @@ class BottomControls extends StatelessWidget {
               IconButton(
                 onPressed: browserProvider.canGoBack ? browserProvider.goBack : null,
                 icon: Icon(Icons.arrow_back_ios_rounded, 
-                  color: browserProvider.canGoBack ? CuteColors.darkText : CuteColors.lightText),
+                  color: browserProvider.canGoBack ? iconColor : secondaryIconColor),
               ),
               IconButton(
                 onPressed: browserProvider.canGoForward ? browserProvider.goForward : null,
                 icon: Icon(Icons.arrow_forward_ios_rounded, 
-                  color: browserProvider.canGoForward ? CuteColors.darkText : CuteColors.lightText),
+                  color: browserProvider.canGoForward ? iconColor : secondaryIconColor),
               ),
               const SizedBox(width: 8),
               FloatingActionButton(
                 onPressed: () {
                   browserProvider.addTab();
                 },
-                backgroundColor: CuteColors.mintGreen,
+                backgroundColor: browserProvider.themeColor,
                 elevation: 4,
                 mini: true,
                 child: const Icon(Icons.add, color: Colors.white),
@@ -59,7 +65,7 @@ class BottomControls extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const TabsScreen()));
                 },
-                icon: const Icon(Icons.grid_view_rounded, color: CuteColors.darkText),
+                icon: Icon(Icons.grid_view_rounded, color: iconColor),
               ),
               IconButton(
                 onPressed: () {
@@ -70,7 +76,7 @@ class BottomControls extends StatelessWidget {
                      builder: (context) => const CuteMenuOverlay(),
                    );
                 },
-                icon: const Icon(Icons.more_vert_rounded, color: CuteColors.darkText),
+                icon: Icon(Icons.more_vert_rounded, color: iconColor),
               ),
             ],
           ),

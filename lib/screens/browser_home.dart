@@ -74,7 +74,7 @@ class _BrowserHomeState extends State<BrowserHome> {
     });
 
     return Scaffold(
-      backgroundColor: CuteColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: false,
       appBar: const CustomAppBar(),
       body: Stack(
