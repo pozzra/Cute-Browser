@@ -56,4 +56,63 @@ class CuteTheme {
       useMaterial3: true,
     );
   }
+
+  static ThemeData get darkThemeData {
+    return ThemeData(
+      primaryColor: CuteColors.pastelPink,
+      scaffoldBackgroundColor: CuteColors.darkBackground,
+      colorScheme: const ColorScheme.dark(
+        primary: CuteColors.pastelPink,
+        secondary: CuteColors.softPurple,
+        surface: CuteColors.darkSurface,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: IconThemeData(color: CuteColors.darkHeading),
+        titleTextStyle: TextStyle(
+          color: CuteColors.darkHeading,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      iconTheme: const IconThemeData(
+        color: CuteColors.darkHeading,
+      ),
+      textTheme: GoogleFonts.nunitoTextTheme().apply(
+        bodyColor: CuteColors.darkHeading,
+        displayColor: CuteColors.darkHeading,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: CuteColors.darkSurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: CuteColors.pastelPink, width: 2),
+        ),
+        hintStyle: const TextStyle(color: CuteColors.darkSubText),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: CuteColors.pastelPink,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 2,
+        ),
+      ),
+      useMaterial3: true,
+    );
+  }
 }

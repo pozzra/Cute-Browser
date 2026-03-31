@@ -42,18 +42,31 @@ class HistoryScreen extends StatelessWidget {
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: history.length,
               itemBuilder: (context, index) {
                 final item = history[index];
-                return ListTile(
-                   leading: const Icon(Icons.public, color: CuteColors.softPurple),
-                   title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                   subtitle: Text(item.url, maxLines: 1, overflow: TextOverflow.ellipsis),
-                   onTap: () {
-                     browserProvider.loadUrl(item.url);
-                     Navigator.pop(context);
-                   },
+                return Dismissible(
+                  key: Key('${item.url}_$index'),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    color: Colors.redAccent,
+                    child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                  ),
+                  onDismissed: (direction) {
+                    browserProvider.removeFromHistory(index);
+                  },
+                  child: ListTile(
+                    leading: const Icon(Icons.public, color: CuteColors.softPurple),
+                    title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(item.url, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    onTap: () {
+                      browserProvider.loadUrl(item.url);
+                      Navigator.pop(context);
+                    },
+                  ),
                 );
               },
             ),

@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,21 +9,45 @@ import 'notification_service.dart';
 import 'download_service.dart';
 
 class UpdateService {
-  // Replace this with your actual server URL
-  static const String _updateUrl =
-      "https://raw.githubusercontent.com/kun-amra/cute_browser/main/update.json";
+  static const String _githubReleaseUrl =
+      "https://api.github.com/repos/kun-amra/cute_browser/releases/latest";
 
-  static Future<void> checkAndPromptUpdate(BuildContext context) async {
+  static Future<void> checkAndPromptUpdate(BuildContext context, {bool silent = false}) async {
     try {
       final dio = Dio();
-      final response = await dio.get(_updateUrl);
+      // Added User-Agent for GitHub API
+      final response = await dio.get(
+        _githubReleaseUrl,
+        options: Options(headers: {"User-Agent": "Flutter-Cute-Browser"}),
+      );
 
       if (response.statusCode == 200) {
         final data = response.data;
-        final latestVersion = data['latest_version'] as String;
-        final downloadUrl = data['download_url'] as String;
-        final releaseNotes =
-            data['release_notes'] as String? ?? "New version available!";
+        final latestTag = data['tag_name'] as String;
+        final latestVersion = latestTag.replaceAll('v', '');
+        final releaseNotes = data['body'] as String? ?? "New version available! ✨";
+        final assets = data['assets'] as List<dynamic>;
+
+        // Find the right download URL for the current platform
+        String? downloadUrl;
+        if (defaultTargetPlatform == TargetPlatform.android) {
+          downloadUrl = assets
+              .firstWhere(
+                (a) => (a['name'] as String).endsWith('.apk'),
+                orElse: () => null,
+              )?['browser_download_url'];
+        } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+           downloadUrl = assets
+              .firstWhere(
+                (a) => (a['name'] as String).endsWith('.ipa'),
+                orElse: () => null,
+              )?['browser_download_url'];
+        }
+
+        if (downloadUrl == null) {
+          debugPrint("No compatible update asset found for this platform.");
+          return;
+        }
 
         final packageInfo = await PackageInfo.fromPlatform();
         final currentVersion = packageInfo.version;
@@ -32,7 +56,7 @@ class UpdateService {
 
         if (_isNewerVersion(currentVersion, latestVersion)) {
           _showUpdateDialog(context, latestVersion, downloadUrl, releaseNotes);
-        } else {
+        } else if (!silent) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("You are on the latest version! ✨")),
           );
@@ -40,10 +64,11 @@ class UpdateService {
       }
     } catch (e) {
       debugPrint("Update check failed: $e");
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Could not check for updates: $e ❌")),
-      );
+      if (!silent && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Could not check for updates: $e ❌")),
+        );
+      }
     }
   }
 

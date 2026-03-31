@@ -35,21 +35,27 @@ const String backgroundPlayScript = """
     window.AudioContext = window.webkitAudioContext = function() {
       const ac = new OriginalAC();
       Object.defineProperty(ac, 'state', { get: function() { return 'running'; } });
+      
+      // Silent Loop: Keeps the AudioContext pipeline alive even when there's no active media.
+      // This is crucial for background playback on many Android devices.
+      try {
+        const oscillator = ac.createOscillator();
+        const gainNode = ac.createGain();
+        gainNode.gain.value = 0.001; // Extremely low but not zero
+        oscillator.connect(gainNode);
+        gainNode.connect(ac.destination);
+        oscillator.start(0);
+      } catch(e) { console.log("CuteBrowser: Silent loop init failed", e); }
+      
       return ac;
     };
   }
 
-  ['visibilitychange', 'webkitvisibilitychange', 'blur', 'focusout', 'pagehide', 'pageshow'].forEach(name => {
-    window.addEventListener(name, (e) => { 
-      e.stopImmediatePropagation(); 
-      applyMocks();
-      sync(); // React to visibility changes immediately
-    }, true);
-  });
-
   let userPaused = false;
   let lastUserAction = 0;
-  ['click', 'touchstart', 'mousedown', 'keydown', 'touchend', 'scroll', 'touchmove'].forEach(name => {
+  
+  // Capture more events, especially pointer events the modern players use
+  ['click', 'touchstart', 'mousedown', 'keydown', 'touchend', 'scroll', 'touchmove', 'pointerdown', 'pointerup', 'pointermove'].forEach(name => {
     window.addEventListener(name, () => { lastUserAction = Date.now(); }, { capture: true, passive: true });
   });
 
@@ -66,9 +72,11 @@ const String backgroundPlayScript = """
     videos.forEach(v => {
       if (!v._notiAttached) {
         v.addEventListener('play', () => { 
+           // If it plays, and there was a recent user action, consider it user-initiated
            if (Date.now() - lastUserAction < 5000) userPaused = false; 
         });
         v.addEventListener('pause', () => {
+          // If paused by a user action, respect it
           if (Date.now() - lastUserAction < 5000) {
             userPaused = true;
           } else {
@@ -77,10 +85,21 @@ const String backgroundPlayScript = """
           }
         });
         v.addEventListener('ratechange', () => forcePlay(v));
+        // Also listen for ended to avoid infinite loop restarting a finished video
+        v.addEventListener('ended', () => {
+          if (document.title.includes('YouTube') && !userPaused) {
+             // YouTube next may need a push
+             setTimeout(() => sync(), 1000);
+          }
+        });
         v._notiAttached = true;
       }
-      forcePlay(v);
+      // Do not force play on every sync tick if user paused it
+      if (!userPaused) {
+        forcePlay(v);
+      }
     });
+
     if ('mediaSession' in navigator) {
        const isPlaying = Array.from(videos).some(v => !v.paused);
        navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
@@ -94,10 +113,20 @@ const String backgroundPlayScript = """
     }
   };
 
+  ['visibilitychange', 'webkitvisibilitychange', 'blur', 'focusout', 'pagehide', 'pageshow'].forEach(name => {
+    window.addEventListener(name, (e) => { 
+      e.stopImmediatePropagation(); 
+      applyMocks();
+      // Only force play on visibility changes if the user didn't pause before backgrounding
+      if (!userPaused) sync(); 
+    }, true);
+  });
+
   if ('mediaSession' in navigator) {
     navigator.mediaSession.setActionHandler('play', () => { userPaused = false; sync(); });
     navigator.mediaSession.setActionHandler('pause', () => { userPaused = true; document.querySelectorAll('video, audio').forEach(v => v.pause()); });
     
+    // Attempt to keep MediaSession alive even if silenced
     const updateMeta = () => {
       if (!navigator.mediaSession) return;
       let title = document.title.replace(' - YouTube', '');
@@ -123,17 +152,17 @@ const String backgroundPlayScript = """
         }
       }
     };
-    setInterval(updateMeta, 1000);
+    setInterval(updateMeta, 2000);
   }
 
   window.syncAllVideos = sync;
-  // setInterval(sync, 400); // REPLACED with event-driven sync
   
-  // Call periodically but much less frequently just as a fallback
-  setInterval(sync, 5000); 
+  // Faster interval for core sync, though browser will throttle this to ~1min in background anyway.
+  // The silent loop helps prevent the engine from totally suspending.
+  setInterval(sync, 3000); 
 
   applyMocks();
   sync();
-  console.log("CuteBrowser: Background Play (v12 Event-Driven) Active");
+  console.log("CuteBrowser: Background Play (v14 Silent Loop) Active");
 })();
 """;

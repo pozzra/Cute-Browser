@@ -14,6 +14,7 @@ import '../services/download_service.dart';
 import '../utils/google_login_fix_script.dart';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:async';
 
 class BrowserTab {
   late WebViewController controller;
@@ -261,6 +262,16 @@ class Bookmark {
   final String url;
 
   Bookmark({required this.title, required this.url});
+
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    'url': url,
+  };
+
+  factory Bookmark.fromJson(Map<String, dynamic> json) => Bookmark(
+    title: json['title'] as String,
+    url: json['url'] as String,
+  );
 }
 
 class Shortcut {
@@ -301,6 +312,8 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool _isSafeBrowsingEnabled = true;
   bool _isAppStarting = true;
   bool get isAppStarting => _isAppStarting;
+  
+  StreamSubscription<AudioInterruptionEvent>? _interruptionSubscription;
 
   List<BrowserTab> get tabs => _tabs;
   List<Bookmark> get bookmarks => _bookmarks;
@@ -352,6 +365,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _interruptionSubscription?.cancel();
     super.dispose();
   }
 
@@ -491,13 +505,21 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   void addBookmark(String title, String url) {
     if (!isBookmarked(url)) {
       _bookmarks.add(Bookmark(title: title, url: url));
+      _saveBookmarks();
       notifyListeners();
     }
   }
 
   void removeBookmark(String url) {
     _bookmarks.removeWhere((b) => b.url == url);
+    _saveBookmarks();
     notifyListeners();
+  }
+
+  void _saveBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = _bookmarks.map((b) => jsonEncode(b.toJson())).toList();
+    await prefs.setStringList('bookmarks', jsonList);
   }
 
   bool isBookmarked(String url) {
@@ -514,14 +536,30 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     if (_history.isNotEmpty && _history.first.url == url) return;
 
     _history.insert(0, Bookmark(title: title, url: url));
-    if (_history.length > 100) {
+    if (_history.length > 500) { // Increased limit for better user research
       _history.removeLast();
     }
+    _saveHistory();
     notifyListeners();
+  }
+
+  void removeFromHistory(int index) {
+    if (index >= 0 && index < _history.length) {
+      _history.removeAt(index);
+      _saveHistory();
+      notifyListeners();
+    }
+  }
+
+  void _saveHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = _history.map((b) => jsonEncode(b.toJson())).toList();
+    await prefs.setStringList('history', jsonList);
   }
 
   Future<void> clearHistory() async {
     _history.clear();
+    _saveHistory();
     notifyListeners();
     // Also clear web cache/cookies
     await clearAllData();
@@ -540,6 +578,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool _isAdBlockEnabled = true;
   bool _isBackgroundPlayEnabled = false; // Default to false for phone interface
   bool _isDesktopMode = false;
+  ThemeMode _themeMode = ThemeMode.system;
   String _favoriteUrl = "";
 
   Color get themeColor => _themeColor;
@@ -547,6 +586,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool get isAdBlockEnabled => _isAdBlockEnabled;
   bool get isBackgroundPlayEnabled => _isBackgroundPlayEnabled;
   bool get isDesktopMode => _isDesktopMode;
+  ThemeMode get themeMode => _themeMode;
   String get favoriteUrl => _favoriteUrl;
   Color get adaptiveTextColor =>
       _themeColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
@@ -562,6 +602,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
         prefs.getBool('isBackgroundPlayEnabled') ?? false;
     _isDesktopMode = prefs.getBool('isDesktopMode') ?? false;
     _isSafeBrowsingEnabled = prefs.getBool('isSafeBrowsingEnabled') ?? true;
+    _themeMode = ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index];
     _favoriteUrl = prefs.getString('favoriteUrl') ?? "";
 
     // Load Shortcuts
@@ -618,6 +659,20 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
         ),
       ]);
       _saveShortcuts();
+    }
+
+    // Load History
+    final historyJson = prefs.getStringList('history');
+    if (historyJson != null) {
+      _history.clear();
+      _history.addAll(historyJson.map((h) => Bookmark.fromJson(jsonDecode(h))));
+    }
+
+    // Load Bookmarks
+    final bookmarksJson = prefs.getStringList('bookmarks');
+    if (bookmarksJson != null) {
+      _bookmarks.clear();
+      _bookmarks.addAll(bookmarksJson.map((b) => Bookmark.fromJson(jsonDecode(b))));
     }
 
     // Restore Tabs
@@ -684,6 +739,13 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     reload();
   }
 
+  void updateThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('themeMode', mode.index);
+  }
+
   void toggleBackgroundPlay(bool value) async {
     if (value) {
       await requestNotificationPermission();
@@ -733,17 +795,40 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _enableBackgroundMode() async {
     try {
-      // 1. Keep CPU Awake (Foreground Service handles this on Android)
-      // Removing WakelockPlus.enable() because it prevents the screen from locking.
-
-      // 2. Audio Focus Request (CRITICAL for background play)
+      // 1. Audio Session Request & Interruption Handling
       final session = await AudioSession.instance;
       await session.configure(const AudioSessionConfiguration.music());
+      
+      // Cancel previous subscription if any
+      await _interruptionSubscription?.cancel();
+      
+      // Listen for interruptions (e.g. phone calls, other apps playing music)
+      _interruptionSubscription = session.interruptionEventStream.listen((event) {
+        if (event.begin) {
+          switch (event.type) {
+            case AudioInterruptionType.pause:
+            case AudioInterruptionType.unknown:
+              // System managed, WebView handles standard pause via media session
+              break;
+            case AudioInterruptionType.duck:
+              // Standard ducking handled by OS
+              break;
+          }
+        } else {
+          // Interruption ended, resume if it was a pause
+          if (event.type == AudioInterruptionType.pause) {
+            for (var tab in _tabs) {
+               tab.resumeMedia();
+            }
+          }
+        }
+      });
+
       if (await session.setActive(true)) {
         debugPrint("Audio session activated successfully.");
       }
 
-      // 3. Start Foreground Service (Android)
+      // 2. Start Foreground Service (Android)
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         // Battery Optimization check
         if (await Permission.ignoreBatteryOptimizations.isDenied) {
@@ -752,6 +837,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
 
         bool hasPermissions = await FlutterBackground.hasPermissions;
         if (hasPermissions) {
+          // If already enabled, it doesn't hurt to call again to ensure it's robust
           await FlutterBackground.enableBackgroundExecution();
         } else {
           debugPrint("Background permissions not granted yet.");
@@ -764,10 +850,16 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _disableBackgroundMode() async {
     try {
+      await _interruptionSubscription?.cancel();
+      _interruptionSubscription = null;
+      
       await WakelockPlus.disable();
       if (!kIsWeb && FlutterBackground.isBackgroundExecutionEnabled) {
         await FlutterBackground.disableBackgroundExecution();
       }
+      
+      final session = await AudioSession.instance;
+      await session.setActive(false);
     } catch (e) {
       debugPrint("Error disabling background mode: $e");
     }

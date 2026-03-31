@@ -1,0 +1,15 @@
+Analyzing cute_browser...                                       
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\ai_chat_screen.dart:126:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\ai_chat_screen.dart:186:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\downloads_screen.dart:150:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\downloads_screen.dart:163:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\downloads_screen.dart:200:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\downloads_screen.dart:221:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\downloads_screen.dart:263:47 - deprecated_member_use
+   info - Use interpolation to compose strings and values - lib\screens\downloads_screen.dart:292:12 - prefer_interpolation_to_compose_strings
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\settings_screen.dart:154:25 - deprecated_member_use
+warning - Unused import: 'dart:io' - lib\services\update_service.dart:1:8 - unused_import
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\widgets\cute_menu_overlay.dart:312:15 - deprecated_member_use
+
+11 issues found. (ran in 9.7s)

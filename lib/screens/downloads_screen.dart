@@ -147,7 +147,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -160,7 +160,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: themeColor.withOpacity(0.1),
+                  color: themeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(_getFileIcon(active.fileName), color: themeColor),
@@ -197,7 +197,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: active.progress > 0 ? active.progress : null,
-              backgroundColor: themeColor.withOpacity(0.1),
+              backgroundColor: themeColor.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation<Color>(themeColor),
               minHeight: 6,
             ),
@@ -218,7 +218,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: themeColor.withOpacity(0.2),
+                color: themeColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(_getFileIcon(item.fileName), color: themeColor),
@@ -260,7 +260,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               child: ElevatedButton(
                 onPressed: () => OpenFile.open(item.path),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: themeColor.withOpacity(0.1),
+                  backgroundColor: themeColor.withValues(alpha: 0.1),
                   foregroundColor: themeColor,
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -289,7 +289,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     if (bytes <= 0) return "0 B";
     const suffixes = ["B", "KB", "MB", "GB", "TB"];
     var i = (math.log(bytes) / math.log(1024)).floor();
-    return ((bytes / math.pow(1024, i)).toStringAsFixed(1)) + ' ' + suffixes[i];
+    return '${(bytes / math.pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
   }
 
   void _showItemMenu(DownloadItem item) {

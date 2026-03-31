@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'services/notification_service.dart';
 import 'services/download_service.dart';
 import 'services/ai_service.dart';
+import 'services/update_service.dart';
 import 'screens/downloads_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -52,6 +53,9 @@ class _CuteBrowserAppState extends State<CuteBrowserApp> {
   void initState() {
     super.initState();
     _setupNotificationListener();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UpdateService.checkAndPromptUpdate(context, silent: true);
+    });
   }
 
   void _setupNotificationListener() {
@@ -66,11 +70,14 @@ class _CuteBrowserAppState extends State<CuteBrowserApp> {
 
   @override
   Widget build(BuildContext context) {
+    final browserProvider = Provider.of<BrowserProvider>(context);
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'Cute Browser',
       debugShowCheckedModeBanner: false,
       theme: CuteTheme.themeData,
+      darkTheme: CuteTheme.darkThemeData,
+      themeMode: browserProvider.themeMode,
       home: const BrowserHome(),
     );
   }

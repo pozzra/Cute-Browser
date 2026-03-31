@@ -1,0 +1,22 @@
+Usage: odevio [OPTIONS] COMMAND [ARGS]...
+
+  Command line tool to build & release your flutter apps easily.
+
+  Github : https://github.com/Odevio/Odevio-CLI
+  Documentation : https://odevio.readthedocs.io/en/master/
+  Download : https://pypi.org/project/odevio/
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  apikey   Manage your API keys.
+  app      Subcommands to manage your applications on Odevio.
+  apple    Subcommands to manage Apple specific settings for Odevio.
+  build    Subcommands to build an app and track builds.
+  profile  Profile of the logged in user.
+  signin   Logs in to your Odevio account.
+  signout  Log out of your Odevio account.
+  signup   Creates an Odevio user account.
+  team     Subcommands to manage teams and corresponding users.

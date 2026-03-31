@@ -151,7 +151,7 @@ class SettingsScreen extends StatelessWidget {
                     leading: CircleAvatar(
                       backgroundColor: Color(
                         int.parse(shortcut.color),
-                      ).withOpacity(0.2),
+                      ).withValues(alpha: 0.2),
                       child: Text(shortcut.icon),
                     ),
                     title: Text(shortcut.name),

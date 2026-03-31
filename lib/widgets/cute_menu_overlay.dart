@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../providers/browser_provider.dart';
 import '../theme/colors.dart';
 import '../screens/history_screen.dart';
 import '../screens/bookmarks_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../services/update_service.dart';
 import '../screens/downloads_screen.dart';
-import '../screens/ai_chat_screen.dart';
 
 class CuteMenuOverlay extends StatelessWidget {
   const CuteMenuOverlay({super.key});
@@ -78,22 +77,10 @@ class CuteMenuOverlay extends StatelessWidget {
                 );
               },
             ),
-            _buildMenuItem(
-              context,
-              icon: Icons.auto_awesome_outlined,
-              title: "Cute AI",
-              textColor: browserProvider.themeColor,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AiChatScreen()),
-                );
-              },
-            ),
             Divider(color: dividerColor),
             // Expanded Settings Section
             _buildThemeColorSelector(context),
+            _buildThemeModeSelector(context),
             _buildToggleItem(
               context,
               icon: Icons.block_rounded,
@@ -122,29 +109,6 @@ class CuteMenuOverlay extends StatelessWidget {
               value: browserProvider.isDesktopMode,
               onChanged: (val) => browserProvider.toggleDesktopMode(val),
             ),
-            _buildMenuItem(
-              context,
-              icon: Icons.star_rounded,
-              title: "Set current as Favorite",
-              onTap: () {
-                if (browserProvider.currentUrl.isNotEmpty &&
-                    browserProvider.currentUrl != "about:blank") {
-                  browserProvider.updateFavoriteUrl(browserProvider.currentUrl);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Current page set as favorite! 💖"),
-                    ),
-                  );
-                }
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.edit_note_rounded,
-              title: "Edit Favorite URL",
-              onTap: () => _showFavoriteDialog(context, browserProvider),
-            ),
-            Divider(color: dividerColor),
             Divider(color: dividerColor),
             _buildMenuItem(
               context,
@@ -153,17 +117,6 @@ class CuteMenuOverlay extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 UpdateService.checkAndPromptUpdate(context);
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.construction_outlined,
-              title: "Set as default browser / Info",
-              onTap: () async {
-                final url = Uri.parse("https://t.me/kun_amra");
-                if (await canLaunchUrl(url)) {
-                  await launchUrl(url, mode: LaunchMode.externalApplication);
-                }
               },
             ),
             _buildMenuItem(
@@ -197,7 +150,14 @@ class CuteMenuOverlay extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.share_outlined),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      final url = browserProvider.currentUrl;
+                      final title = browserProvider.currentTitle;
+                      if (url.isNotEmpty && url != "about:blank") {
+                        Share.share('$title\n$url');
+                      }
+                      Navigator.pop(context);
+                    },
                   ),
                   IconButton(
                     icon: const Icon(Icons.download_rounded),
@@ -309,7 +269,7 @@ class CuteMenuOverlay extends StatelessWidget {
             child: Switch(
               value: value,
               onChanged: onChanged,
-              activeColor: browserProvider.themeColor,
+              activeThumbColor: browserProvider.themeColor,
               activeTrackColor: browserProvider.themeColor.withValues(
                 alpha: 0.3,
               ),
@@ -415,38 +375,97 @@ class CuteMenuOverlay extends StatelessWidget {
     );
   }
 
-  void _showFavoriteDialog(BuildContext context, BrowserProvider provider) {
-    final controller = TextEditingController(text: provider.favoriteUrl);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          title: const Text("Set Favorite Web Page"),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              hintText: "https://example.com",
-              labelText: "URL",
+  Widget _buildThemeModeSelector(BuildContext context) {
+    final browserProvider = Provider.of<BrowserProvider>(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Theme Mode",
+            style: TextStyle(
+              color: CuteColors.darkText,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildModeOption(
+                context,
+                icon: Icons.light_mode_rounded,
+                label: "Light",
+                isSelected: browserProvider.themeMode == ThemeMode.light,
+                onTap: () => browserProvider.updateThemeMode(ThemeMode.light),
+              ),
+              _buildModeOption(
+                context,
+                icon: Icons.dark_mode_rounded,
+                label: "Dark",
+                isSelected: browserProvider.themeMode == ThemeMode.dark,
+                onTap: () => browserProvider.updateThemeMode(ThemeMode.dark),
+              ),
+              _buildModeOption(
+                context,
+                icon: Icons.brightness_auto_rounded,
+                label: "System",
+                isSelected: browserProvider.themeMode == ThemeMode.system,
+                onTap: () => browserProvider.updateThemeMode(ThemeMode.system),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeOption(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final themeColor = Provider.of<BrowserProvider>(context).themeColor;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? themeColor.withValues(alpha: 0.15) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? themeColor : Colors.grey[300]!,
+              width: 1.5,
             ),
-            TextButton(
-              onPressed: () {
-                provider.updateFavoriteUrl(controller.text.trim());
-                Navigator.pop(context);
-              },
-              child: const Text("Save"),
-            ),
-          ],
-        );
-      },
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? themeColor : Colors.grey[600],
+                size: 20,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isSelected ? themeColor : Colors.grey[600],
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -8,4 +8,10 @@ class CuteColors {
   static const Color cream = Color(0xFFFFF7E6);
   static const Color darkText = Color(0xFF5D5D5D);
   static const Color lightText = Color(0xFF9E9E9E);
+  
+  // Dark Mode Colors
+  static const Color darkBackground = Color(0xFF121212);
+  static const Color darkSurface = Color(0xFF1E1E1E);
+  static const Color darkHeading = Color(0xFFF5F5F5);
+  static const Color darkSubText = Color(0xFFAAAAAA);
 }
