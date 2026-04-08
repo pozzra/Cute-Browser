@@ -810,6 +810,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isSafeBrowsingEnabled', value);
+    reload();
   }
 
   void updateFavoriteUrl(String url) async {

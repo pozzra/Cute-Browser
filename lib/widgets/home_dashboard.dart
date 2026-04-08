@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../providers/browser_provider.dart';
 import '../theme/colors.dart';
+import 'animated_press.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -279,47 +280,48 @@ class _HomeDashboardState extends State<HomeDashboard> {
               ),
             );
           },
-          child: GestureDetector(
+          child: AnimatedPress(
             onTap: () {
-              HapticFeedback.lightImpact();
               browserProvider.loadUrl(shortcut.url);
             },
-            onLongPress: () {
-              HapticFeedback.mediumImpact();
-              _showRemoveDialog(context, browserProvider, shortcut, index);
-            },
-            child: Column(
-              children: [
-                Container(
-                  width: 55,
-                  height: 55,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.3),
-                      width: 1,
+            child: GestureDetector(
+              onLongPress: () {
+                HapticFeedback.mediumImpact();
+                _showRemoveDialog(context, browserProvider, shortcut, index);
+              },
+              child: Column(
+                children: [
+                  Container(
+                    width: 55,
+                    height: 55,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        shortcut.icon,
+                        style: const TextStyle(fontSize: 28),
+                      ),
                     ),
                   ),
-                  child: Center(
-                    child: Text(
-                      shortcut.icon,
-                      style: const TextStyle(fontSize: 28),
+                  const SizedBox(height: 8),
+                  Text(
+                    shortcut.name,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: browserProvider.adaptiveTextColor,
+                      fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  shortcut.name,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: browserProvider.adaptiveTextColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

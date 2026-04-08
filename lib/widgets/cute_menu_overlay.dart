@@ -6,6 +6,7 @@ import '../screens/history_screen.dart';
 import '../screens/bookmarks_screen.dart';
 import '../services/update_service.dart';
 import '../screens/downloads_screen.dart';
+import 'animated_press.dart';
 
 class CuteMenuOverlay extends StatelessWidget {
   const CuteMenuOverlay({super.key});
@@ -140,16 +141,18 @@ class CuteMenuOverlay extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_rounded, color: textColor),
-                    onPressed: () {
+                  AnimatedPress(
+                    onTap: () {
                       browserProvider.goBack();
                       Navigator.pop(context);
                     },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(Icons.arrow_back_rounded, color: textColor),
+                    ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.share_outlined, color: textColor),
-                    onPressed: () {
+                  AnimatedPress(
+                    onTap: () {
                       final url = browserProvider.currentUrl;
                       final title = browserProvider.currentTitle;
                       if (url.isNotEmpty && url != "about:blank") {
@@ -157,10 +160,13 @@ class CuteMenuOverlay extends StatelessWidget {
                       }
                       Navigator.pop(context);
                     },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(Icons.share_outlined, color: textColor),
+                    ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.download_rounded, color: textColor),
-                    onPressed: () {
+                  AnimatedPress(
+                    onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
@@ -169,13 +175,20 @@ class CuteMenuOverlay extends StatelessWidget {
                         ),
                       );
                     },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(Icons.download_rounded, color: textColor),
+                    ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.refresh_rounded, color: textColor),
-                    onPressed: () {
+                  AnimatedPress(
+                    onTap: () {
                       browserProvider.reload();
                       Navigator.pop(context);
                     },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(Icons.refresh_rounded, color: textColor),
+                    ),
                   ),
                 ],
               ),
@@ -200,7 +213,7 @@ class CuteMenuOverlay extends StatelessWidget {
     final theme = Theme.of(context);
     final itemTextColor = textColor ?? theme.colorScheme.onSurface;
 
-    return InkWell(
+    return AnimatedPress(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

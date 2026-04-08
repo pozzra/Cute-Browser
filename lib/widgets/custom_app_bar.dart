@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/browser_provider.dart';
 import '../theme/colors.dart';
 import '../screens/bookmarks_screen.dart';
+import 'animated_press.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -110,7 +111,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             color: CuteColors.lightText,
                             size: 20,
                           ),
-                          if (browserProvider.currentUrl != "about:blank") ...[
+                          if (browserProvider.isSafeBrowsingEnabled && browserProvider.currentUrl != "about:blank") ...[
                             const SizedBox(width: 4),
                             Text(
                               browserProvider.isSecureSite
@@ -194,22 +195,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(50),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.35),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: Provider.of<BrowserProvider>(context).adaptiveTextColor,
-            size: 24,
-          ),
+    return AnimatedPress(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.35),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: Provider.of<BrowserProvider>(context).adaptiveTextColor,
+          size: 24,
         ),
       ),
     );

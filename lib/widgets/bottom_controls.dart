@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/browser_provider.dart';
 import '../screens/tabs_screen.dart';
 import 'cute_menu_overlay.dart';
+import 'animated_press.dart';
 
 class BottomControls extends StatelessWidget {
   const BottomControls({super.key});
@@ -86,7 +86,7 @@ class BottomControls extends StatelessWidget {
   }
 }
 
-class _SmoothActionButton extends StatefulWidget {
+class _SmoothActionButton extends StatelessWidget {
   final VoidCallback? onTap;
   final IconData icon;
   final Color color;
@@ -102,45 +102,19 @@ class _SmoothActionButton extends StatefulWidget {
   });
 
   @override
-  State<_SmoothActionButton> createState() => _SmoothActionButtonState();
-}
-
-class _SmoothActionButtonState extends State<_SmoothActionButton> {
-  double _scale = 1.0;
-
-  void _handleTapDown(TapDownDetails details) {
-    if (widget.onTap != null) {
-      setState(() => _scale = 0.85);
-      HapticFeedback.lightImpact();
-    }
-  }
-
-  void _handleTapUp(TapUpDetails details) {
-    if (widget.onTap != null) {
-      setState(() => _scale = 1.0);
-    }
-  }
-
-  void _handleTapCancel() {
-    if (widget.onTap != null) {
-      setState(() => _scale = 1.0);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    Widget iconWidget = Icon(widget.icon, color: widget.color, size: widget.isFab ? 28 : 24);
+    Widget iconWidget = Icon(icon, color: color, size: isFab ? 28 : 24);
 
-    if (widget.isFab) {
+    if (isFab) {
       iconWidget = Container(
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: widget.fabColor,
+          color: fabColor,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: widget.fabColor!.withValues(alpha: 0.4),
+              color: fabColor!.withValues(alpha: 0.4),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -150,19 +124,11 @@ class _SmoothActionButtonState extends State<_SmoothActionButton> {
       );
     }
 
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _scale,
-        duration: const Duration(milliseconds: 100),
-        curve: Curves.easeOut,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: iconWidget,
-        ),
+    return AnimatedPress(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: iconWidget,
       ),
     );
   }
