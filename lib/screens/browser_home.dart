@@ -87,13 +87,18 @@ class _BrowserHomeState extends State<BrowserHome> {
             ),
           Column(
             children: [
-              if (browserProvider.isLoading)
-                LinearProgressIndicator(
-                  value: browserProvider.progress,
-                  backgroundColor: Colors.transparent,
-                  color: browserProvider.themeColor,
-                  minHeight: 2,
-                ),
+              ValueListenableBuilder<double>(
+                valueListenable: browserProvider.currentProgress,
+                builder: (context, progress, child) {
+                  if (progress <= 0 || progress >= 1) return const SizedBox.shrink();
+                  return LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.white10,
+                    color: browserProvider.themeColor,
+                    minHeight: 2.5,
+                  );
+                },
+              ),
               Expanded(
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(

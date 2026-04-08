@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_background/flutter_background.dart';
@@ -253,6 +254,16 @@ class BrowserTab {
       return "Title: $title\nURL: $currentUrl";
     }
   }
+
+  void dispose() {
+    try {
+      // Clear the underlying native webview to stop background play and free memory
+      controller.loadRequest(Uri.parse("about:blank"));
+      controller.clearCache();
+    } catch (e) {
+      debugPrint("Error disposing tab: $e");
+    }
+  }
 }
 
 class Bookmark {
@@ -311,6 +322,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool _isAppStarting = true;
   bool get isAppStarting => _isAppStarting;
   
+  final ValueNotifier<double> currentProgress = ValueNotifier(0);
   StreamSubscription<AudioInterruptionEvent>? _interruptionSubscription;
 
   List<BrowserTab> get tabs => _tabs;
@@ -344,6 +356,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
     if (_isAppStarting && !isLoading) {
       _isAppStarting = false;
     }
+    currentProgress.value = _tabs.isEmpty ? 0 : currentTab.progress;
     _debounceSave();
     notifyListeners();
   }
@@ -427,6 +440,7 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   void closeTab(int index) {
     if (_tabs.length <= 1) return; // Don't close the last tab
 
+    _tabs[index].dispose();
     _tabs.removeAt(index);
 
     if (_currentIndex >= index) {
@@ -437,6 +451,9 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void closeAllTabs() {
+    for (var tab in _tabs) {
+      tab.dispose();
+    }
     _tabs.clear();
     // Always keep at least one tab
     _tabs.add(
@@ -704,6 +721,9 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
       }
 
       // Swap list atomically to avoid empty state crashes
+      for (var tab in _tabs) {
+        tab.dispose();
+      }
       _tabs.clear();
       _tabs.addAll(newTabs);
       _currentIndex = savedIndex.clamp(0, _tabs.length - 1);
