@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/browser_provider.dart';
 import '../services/download_service.dart';
 import '../theme/colors.dart';
+// ignore: unused_import
+import '../widgets/animated_press.dart';
 
 class VideoDownloaderScreen extends StatefulWidget {
   const VideoDownloaderScreen({super.key});

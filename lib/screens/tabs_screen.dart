@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/browser_provider.dart';
 import '../theme/colors.dart';
+// ignore: unused_import
+import '../widgets/animated_press.dart';
 
 class TabsScreen extends StatelessWidget {
   const TabsScreen({super.key});

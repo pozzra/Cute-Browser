@@ -7,6 +7,8 @@ import 'history_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/update_service.dart';
 import 'video_downloader_screen.dart';
+// ignore: unused_import
+import '../widgets/animated_press.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});

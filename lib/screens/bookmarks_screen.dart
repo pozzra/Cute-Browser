@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/browser_provider.dart';
 import '../theme/colors.dart';
+import '../widgets/animated_press.dart';
 
 class BookmarksScreen extends StatelessWidget {
   const BookmarksScreen({super.key});
@@ -41,41 +42,43 @@ class BookmarksScreen extends StatelessWidget {
                 final bookmark = browserProvider.bookmarks[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
+                  child: AnimatedPress(
+                    onTap: () {
+                      browserProvider.loadUrl(bookmark.url);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        title: Text(
+                          bookmark.title,
+                          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      title: Text(
-                        bookmark.title,
-                        style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        bookmark.url,
-                        style: const TextStyle(color: CuteColors.lightText, fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () {
-                        browserProvider.loadUrl(bookmark.url);
-                        Navigator.pop(context);
-                      },
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.error),
-                        onPressed: () {
-                          browserProvider.removeBookmark(bookmark.url);
-                        },
+                        subtitle: Text(
+                          bookmark.url,
+                          style: const TextStyle(color: CuteColors.lightText, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.error),
+                          onPressed: () {
+                            browserProvider.removeBookmark(bookmark.url);
+                          },
+                        ),
                       ),
                     ),
                   ),

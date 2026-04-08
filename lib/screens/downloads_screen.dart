@@ -7,6 +7,8 @@ import '../providers/browser_provider.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'dart:math' as math;
+// ignore: unused_import
+import '../widgets/animated_press.dart';
 
 class DownloadsScreen extends StatefulWidget {
   const DownloadsScreen({super.key});
