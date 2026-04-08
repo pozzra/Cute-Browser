@@ -32,21 +32,31 @@ const String adBlockerScript = """
     const adBeingShown = document.querySelector('.ad-showing') || 
                         document.querySelector('.ytp-ad-player-overlay') || 
                         document.querySelector('.ytp-ad-visit-advertiser-button');
-    if (video && adBeingShown && (video.duration > 0 && !isNaN(video.duration))) {
-        // Double check this is not a main video
-        const isActuallyAd = document.querySelector('.ytp-ad-text') || 
-                            document.querySelector('.ytp-ad-preview-text') ||
-                            document.querySelector('.ytp-ad-skip-button');
-        if (isActuallyAd) {
-           video.currentTime = video.duration;
+    if (video && adBeingShown) {
+        // Mute during ad for "smoothness"
+        if (!video.muted) {
+            video.muted = true;
+            video.dataset.wasAutomuted = "true";
         }
+        
+        if (video.duration > 0 && !isNaN(video.duration)) {
+            const isActuallyAd = document.querySelector('.ytp-ad-text') || 
+                                document.querySelector('.ytp-ad-preview-text') ||
+                                document.querySelector('.ytp-ad-skip-button');
+            if (isActuallyAd) {
+                video.currentTime = video.duration;
+            }
+        }
+    } else if (video && video.dataset.wasAutomuted === "true") {
+        video.muted = false;
+        delete video.dataset.wasAutomuted;
     }
   }
 
   // Run on load
   removeAds();
 
-  // Run periodically to catch dynamic ads (faster for YouTube)
-  setInterval(removeAds, 500);
+  // Run periodically to catch dynamic ads (faster for "smoothness")
+  setInterval(removeAds, 200);
 })();
 """;

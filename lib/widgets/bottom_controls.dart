@@ -18,7 +18,7 @@ class BottomControls extends StatelessWidget {
 
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: const BorderRadius.only(
@@ -133,8 +133,8 @@ class _SmoothActionButtonState extends State<_SmoothActionButton> {
 
     if (widget.isFab) {
       iconWidget = Container(
-        width: 48,
-        height: 48,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
           color: widget.fabColor,
           shape: BoxShape.circle,
@@ -160,7 +160,7 @@ class _SmoothActionButtonState extends State<_SmoothActionButton> {
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeOut,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: iconWidget,
         ),
       ),
