@@ -10,14 +10,16 @@ class BookmarksScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final browserProvider = Provider.of<BrowserProvider>(context);
 
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: CuteColors.cream,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Bookmarks"),
-        backgroundColor: CuteColors.cream,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: CuteColors.darkText),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -41,7 +43,7 @@ class BookmarksScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: const [
                         BoxShadow(
@@ -55,7 +57,7 @@ class BookmarksScreen extends StatelessWidget {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       title: Text(
                         bookmark.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: CuteColors.darkText),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -70,7 +72,7 @@ class BookmarksScreen extends StatelessWidget {
                         Navigator.pop(context);
                       },
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, color: CuteColors.pastelPink),
+                        icon: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.error),
                         onPressed: () {
                           browserProvider.removeBookmark(bookmark.url);
                         },

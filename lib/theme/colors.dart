@@ -14,4 +14,8 @@ class CuteColors {
   static const Color darkSurface = Color(0xFF1E1E1E);
   static const Color darkHeading = Color(0xFFF5F5F5);
   static const Color darkSubText = Color(0xFFAAAAAA);
+  
+  // Error Colors
+  static const Color errorPink = Color(0xFFFF8B94);
+  static const Color darkErrorPink = Color(0xFFFF5252);
 }

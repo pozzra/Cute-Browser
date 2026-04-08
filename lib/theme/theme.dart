@@ -12,6 +12,8 @@ class CuteTheme {
         secondary: CuteColors.softPurple,
         surface: Colors.white,
         onSurface: Colors.black,
+        error: CuteColors.errorPink,
+        onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -72,6 +74,8 @@ class CuteTheme {
         secondary: CuteColors.softPurple,
         surface: Colors.black,
         onSurface: Colors.white,
+        error: CuteColors.darkErrorPink,
+        onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,

@@ -11,14 +11,16 @@ class HistoryScreen extends StatelessWidget {
     final browserProvider = Provider.of<BrowserProvider>(context);
     final history = browserProvider.history;
 
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: CuteColors.cream,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("History"),
-        backgroundColor: CuteColors.cream,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: CuteColors.darkText),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -52,8 +54,8 @@ class HistoryScreen extends StatelessWidget {
                   background: Container(
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 20),
-                    color: Colors.redAccent,
-                    child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                    color: theme.colorScheme.error,
+                    child: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.onError),
                   ),
                   onDismissed: (direction) {
                     browserProvider.removeFromHistory(index);

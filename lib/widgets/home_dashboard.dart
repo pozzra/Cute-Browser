@@ -328,6 +328,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
   }
 
   void _showRemoveDialog(BuildContext context, BrowserProvider provider, dynamic shortcut, int index) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -344,9 +345,9 @@ class _HomeDashboardState extends State<HomeDashboard> {
               provider.removeShortcut(index);
               Navigator.pop(context);
             },
-            child: const Text(
+            child: Text(
               "Remove",
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.bold),
             ),
           ),
         ],
