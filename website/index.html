@@ -6,7 +6,7 @@
     <title>Cute Browser - The Cutest Way to Surf</title>
     <link
       rel="shortcut icon"
-      href="/assets/image/logo.png"
+      href="assets/image/logo.png"
       type="image/x-icon"
     />
     <meta
@@ -27,20 +27,29 @@
     />
   </head>
   <body>
+    <div id="menu-overlay" class="menu-overlay"></div>
     <nav class="glass-nav">
       <div class="logo">
         <span class="logo-emoji"
           ><img
             style="width: 50px; height: 50px; border-radius: 50%"
-            src="/assets/image/logo.png"
+            src="assets/image/logo.png"
             alt=""
         /></span>
         Cute Browser
       </div>
-      <div class="nav-links">
+      <div class="nav-links" id="nav-menu">
         <a href="#features">Features</a>
         <a href="#about">About</a>
         <a href="#download" class="btn-primary">Download App</a>
+      </div>
+      <div class="nav-extra">
+        <button id="theme-toggle" class="theme-btn">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button id="menu-toggle" class="menu-toggle">
+          <i class="fas fa-bars"></i>
+        </button>
       </div>
     </nav>
 
@@ -55,12 +64,12 @@
         </p>
         <div class="cta-group fade-in-up delay-400">
           <a
-            href="javascript:void(0)"
-            onclick="iosAlert()"
+            href="Cute Browser.ipa"
+            download
             class="btn-primary-lg"
             ><i class="fab fa-apple"></i> iOS Download</a
           >
-          <a href="CuteBrowser.apk" download class="btn-secondary-lg"
+          <a href="Cute Browser.apk" download class="btn-secondary-lg"
             ><i class="fab fa-android"></i> Android APK</a
           >
         </div>
@@ -70,8 +79,10 @@
           <div class="screen">
             <!-- Placeholder for App Screenshot -->
             <img
-              src="/assets/image/app_preview.jpg"
+              id="app-preview"
+              src="assets/image/app_preview_dark.jpg"
               alt="Cute Browser App Preview"
+              class="app-screen-img"
               onerror="
                 this.onerror = null;
                 this.src =

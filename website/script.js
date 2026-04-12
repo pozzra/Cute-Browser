@@ -36,20 +36,63 @@ function iosAlert() {
   alert("iOS Version Coming Soon! Stay polished ✨");
 }
 
-// Theme Toggle
+// Theme Toggle & Asset Switching
 const themeBtn = document.getElementById("theme-toggle");
+const appPreview = document.getElementById("app-preview");
 const body = document.body;
 
-// Check Local Storage
+function updateThemeAssets() {
+  const isDark = body.classList.contains("dark-mode");
+  const themeIcon = themeBtn.querySelector("i");
+
+  if (isDark) {
+    themeIcon.classList.replace("fa-moon", "fa-sun");
+    if (appPreview)
+      appPreview.src = "assets/image/app_preview_dark.jpg";
+    localStorage.setItem("theme", "dark");
+  } else {
+    themeIcon.classList.replace("fa-sun", "fa-moon");
+    if (appPreview)
+      appPreview.src = "assets/image/app_preview_light.jpg";
+    localStorage.setItem("theme", "light");
+  }
+}
+
+// Check Local Storage on load
 if (localStorage.getItem("theme") === "dark") {
   body.classList.add("dark-mode");
 }
+updateThemeAssets();
 
 themeBtn.addEventListener("click", () => {
   body.classList.toggle("dark-mode");
-  if (body.classList.contains("dark-mode")) {
-    localStorage.setItem("theme", "dark");
+  updateThemeAssets();
+});
+
+// Mobile Menu Toggle
+const menuToggle = document.getElementById("menu-toggle");
+const navMenu = document.getElementById("nav-menu");
+const menuOverlay = document.getElementById("menu-overlay");
+
+function toggleMenu() {
+  navMenu.classList.toggle("active");
+  menuOverlay.classList.toggle("active");
+  const menuIcon = menuToggle.querySelector("i");
+  if (navMenu.classList.contains("active")) {
+    menuIcon.classList.replace("fa-bars", "fa-times");
   } else {
-    localStorage.setItem("theme", "light");
+    menuIcon.classList.replace("fa-times", "fa-bars");
   }
+}
+
+menuToggle.addEventListener("click", toggleMenu);
+menuOverlay.addEventListener("click", toggleMenu);
+
+// Close menu when clicking links
+document.querySelectorAll(".nav-menu a").forEach((link) => {
+  link.addEventListener("click", () => {
+    if (navMenu.classList.contains("active")) {
+      toggleMenu();
+    }
+  });
 });
