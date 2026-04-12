@@ -31,10 +31,6 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   });
 });
 
-// iOS Alert
-function iosAlert() {
-  alert("iOS Version Coming Soon! Stay polished ✨");
-}
 
 // Theme Toggle & Asset Switching
 const themeBtn = document.getElementById("theme-toggle");
