@@ -119,7 +119,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                   : "Not Safe",
                               style: TextStyle(
                                 color: browserProvider.isSecureSite
-                                    ? Colors.blue
+                                    ? Colors.blue 
                                     : Colors.red,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
