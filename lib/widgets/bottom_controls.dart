@@ -163,7 +163,6 @@ class _PlaybackButton extends StatelessWidget {
         ),
       ),
     );
-    );
   }
 }
 
