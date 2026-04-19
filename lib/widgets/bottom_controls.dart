@@ -35,53 +35,134 @@ class BottomControls extends StatelessWidget {
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _SmoothActionButton(
-                onTap: browserProvider.canGoBack ? browserProvider.goBack : null,
-                icon: Icons.arrow_back_ios_rounded,
-                color: browserProvider.canGoBack ? iconColor : secondaryIconColor,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (browserProvider.isCurrentlyPlaying || browserProvider.currentTab.isPlaying)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12, top: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _PlaybackButton(
+                      onTap: browserProvider.previousVideo,
+                      icon: Icons.skip_previous_rounded,
+                      color: const Color(0xFFB2E2F2), // Pastel Blue
+                      size: 40,
+                    ),
+                    const SizedBox(width: 20),
+                    _PlaybackButton(
+                      onTap: browserProvider.togglePlay,
+                      icon: (browserProvider.isCurrentlyPlaying || browserProvider.currentTab.isPlaying)
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                      color: const Color(0xFFFFB7B2), // Pastel Pink
+                      size: 56,
+                      iconSize: 32,
+                    ),
+                    const SizedBox(width: 20),
+                    _PlaybackButton(
+                      onTap: browserProvider.nextVideo,
+                      icon: Icons.skip_next_rounded,
+                      color: const Color(0xFFE2B2F2), // Pastel Purple
+                      size: 40,
+                    ),
+                  ],
+                ),
               ),
-              _SmoothActionButton(
-                onTap: browserProvider.canGoForward ? browserProvider.goForward : null,
-                icon: Icons.arrow_forward_ios_rounded,
-                color: browserProvider.canGoForward ? iconColor : secondaryIconColor,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _SmoothActionButton(
+                    onTap: browserProvider.canGoBack ? browserProvider.goBack : null,
+                    icon: Icons.arrow_back_ios_rounded,
+                    color: browserProvider.canGoBack ? iconColor : secondaryIconColor,
+                  ),
+                  _SmoothActionButton(
+                    onTap: browserProvider.canGoForward ? browserProvider.goForward : null,
+                    icon: Icons.arrow_forward_ios_rounded,
+                    color: browserProvider.canGoForward ? iconColor : secondaryIconColor,
+                  ),
+                  const SizedBox(width: 4),
+                  _SmoothActionButton(
+                    onTap: () => browserProvider.addTab(),
+                    icon: Icons.add,
+                    color: Colors.white,
+                    isFab: true,
+                    fabColor: browserProvider.themeColor,
+                  ),
+                  const SizedBox(width: 4),
+                  _SmoothActionButton(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const TabsScreen()));
+                    },
+                    icon: Icons.grid_view_rounded,
+                    color: iconColor,
+                  ),
+                  _SmoothActionButton(
+                    onTap: () {
+                       showModalBottomSheet(
+                         context: context,
+                         isScrollControlled: true,
+                         backgroundColor: Colors.transparent,
+                         builder: (context) => const CuteMenuOverlay(),
+                       );
+                    },
+                    icon: Icons.more_vert_rounded,
+                    color: iconColor,
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
-              _SmoothActionButton(
-                onTap: () => browserProvider.addTab(),
-                icon: Icons.add,
-                color: Colors.white,
-                isFab: true,
-                fabColor: browserProvider.themeColor,
-              ),
-              const SizedBox(width: 4),
-              _SmoothActionButton(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const TabsScreen()));
-                },
-                icon: Icons.grid_view_rounded,
-                color: iconColor,
-              ),
-              _SmoothActionButton(
-                onTap: () {
-                   showModalBottomSheet(
-                     context: context,
-                     isScrollControlled: true,
-                     backgroundColor: Colors.transparent,
-                     builder: (context) => const CuteMenuOverlay(),
-                   );
-                },
-                icon: Icons.more_vert_rounded,
-                color: iconColor,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _PlaybackButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final IconData icon;
+  final Color color;
+  final double size;
+  final double iconSize;
+
+  const _PlaybackButton({
+    required this.onTap,
+    required this.icon,
+    required this.color,
+    required this.size,
+    this.iconSize = 24,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPress(
+      onTap: onTap,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: iconSize,
+        ),
+      ),
+    );
     );
   }
 }

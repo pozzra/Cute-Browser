@@ -148,6 +148,27 @@ const String backgroundPlayScript = """
     setInterval(updateMeta, 2000);
   }
 
+  window.cutePlayAction = (action) => {
+    const v = document.querySelector('video, audio');
+    if (!v) return;
+    if (action === 'play') {
+      if (v.paused) { userPaused = false; v.play(); }
+      else { userPaused = true; v.pause(); }
+    } else if (action === 'next') {
+      const btn = document.querySelector('.ytp-next-button') || 
+                  document.querySelector('.next-button') ||
+                  document.querySelector('a[title*="Next"]');
+      if (btn) btn.click();
+    } else if (action === 'prev') {
+      const btn = document.querySelector('.ytp-prev-button') || 
+                  document.querySelector('.prev-button') ||
+                  document.querySelector('a[title*="Previous"]');
+      if (btn) btn.click();
+      else window.history.back();
+    }
+    sync();
+  };
+
   window.syncAllVideos = sync;
   setInterval(sync, 3000); 
 

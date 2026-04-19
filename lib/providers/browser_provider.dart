@@ -254,6 +254,18 @@ class BrowserTab {
     }
   }
 
+  void togglePlay() {
+    controller.runJavaScript("if(window.cutePlayAction) window.cutePlayAction('play');");
+  }
+
+  void nextVideo() {
+    controller.runJavaScript("if(window.cutePlayAction) window.cutePlayAction('next');");
+  }
+
+  void previousVideo() {
+    controller.runJavaScript("if(window.cutePlayAction) window.cutePlayAction('prev');");
+  }
+
   void dispose() {
     try {
       // Clear the underlying native webview to stop background play and free memory
@@ -916,6 +928,9 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
   String _lastMediaTitle = "";
   bool _isCurrentlyPlaying = false;
 
+  bool get isCurrentlyPlaying => _isCurrentlyPlaying;
+  String get lastMediaTitle => _lastMediaTitle;
+
   void _handlePlaybackEvent(Map<String, dynamic> event) {
     if (!_isBackgroundPlayEnabled) return;
 
@@ -1048,7 +1063,18 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
         color: '0xFFB5EAD7',
       ),
     ]);
-    _saveShortcuts();
     notifyListeners();
+  }
+
+  void togglePlay() {
+    currentTab.togglePlay();
+  }
+
+  void nextVideo() {
+    currentTab.nextVideo();
+  }
+
+  void previousVideo() {
+    currentTab.previousVideo();
   }
 }
