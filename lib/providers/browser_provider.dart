@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audio_session/audio_session.dart';
 import '../utils/ad_blocker_script.dart';
@@ -158,6 +159,10 @@ class BrowserTab {
       if (controller.platform is AndroidWebViewController) {
         (controller.platform as AndroidWebViewController)
             .setMediaPlaybackRequiresUserGesture(false);
+      }
+      if (controller.platform is WebKitWebViewController) {
+        (controller.platform as WebKitWebViewController)
+            .setAllowsInlineMediaPlayback(true);
       }
 
       controller.addJavaScriptChannel(
