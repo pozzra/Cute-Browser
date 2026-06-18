@@ -10,7 +10,6 @@ class BottomControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final browserProvider = Provider.of<BrowserProvider>(context);
     final theme = Theme.of(context);
     final backgroundColor = theme.colorScheme.surface;
     final iconColor = theme.colorScheme.onSurface;
@@ -38,60 +37,81 @@ class BottomControls extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (browserProvider.isCurrentlyPlaying || browserProvider.currentTab.isPlaying)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12, top: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _PlaybackButton(
-                      onTap: browserProvider.previousVideo,
-                      icon: Icons.skip_previous_rounded,
-                      color: const Color(0xFFB2E2F2), // Pastel Blue
-                      size: 40,
-                    ),
-                    const SizedBox(width: 20),
-                    _PlaybackButton(
-                      onTap: browserProvider.togglePlay,
-                      icon: (browserProvider.isCurrentlyPlaying || browserProvider.currentTab.isPlaying)
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      color: const Color(0xFFFFB7B2), // Pastel Pink
-                      size: 56,
-                      iconSize: 32,
-                    ),
-                    const SizedBox(width: 20),
-                    _PlaybackButton(
-                      onTap: browserProvider.nextVideo,
-                      icon: Icons.skip_next_rounded,
-                      color: const Color(0xFFE2B2F2), // Pastel Purple
-                      size: 40,
-                    ),
-                  ],
-                ),
-              ),
+            Consumer<BrowserProvider>(
+              builder: (context, browserProvider, _) {
+                if (!(browserProvider.isCurrentlyPlaying || (browserProvider.tabs.isNotEmpty && browserProvider.currentTab.isPlaying))) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12, top: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _PlaybackButton(
+                        onTap: browserProvider.previousVideo,
+                        icon: Icons.skip_previous_rounded,
+                        color: const Color(0xFFB2E2F2), // Pastel Blue
+                        size: 40,
+                      ),
+                      const SizedBox(width: 20),
+                      _PlaybackButton(
+                        onTap: browserProvider.togglePlay,
+                        icon: (browserProvider.isCurrentlyPlaying || browserProvider.currentTab.isPlaying)
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        color: const Color(0xFFFFB7B2), // Pastel Pink
+                        size: 56,
+                        iconSize: 32,
+                      ),
+                      const SizedBox(width: 20),
+                      _PlaybackButton(
+                        onTap: browserProvider.nextVideo,
+                        icon: Icons.skip_next_rounded,
+                        color: const Color(0xFFE2B2F2), // Pastel Purple
+                        size: 40,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _SmoothActionButton(
-                    onTap: browserProvider.canGoBack ? browserProvider.goBack : null,
-                    icon: Icons.arrow_back_ios_rounded,
-                    color: browserProvider.canGoBack ? iconColor : secondaryIconColor,
+                  Selector<BrowserProvider, bool>(
+                    selector: (_, p) => p.canGoBack,
+                    builder: (context, canGoBack, _) {
+                      return _SmoothActionButton(
+                        onTap: canGoBack ? context.read<BrowserProvider>().goBack : null,
+                        icon: Icons.arrow_back_ios_rounded,
+                        color: canGoBack ? iconColor : secondaryIconColor,
+                      );
+                    },
                   ),
-                  _SmoothActionButton(
-                    onTap: browserProvider.canGoForward ? browserProvider.goForward : null,
-                    icon: Icons.arrow_forward_ios_rounded,
-                    color: browserProvider.canGoForward ? iconColor : secondaryIconColor,
+                  Selector<BrowserProvider, bool>(
+                    selector: (_, p) => p.canGoForward,
+                    builder: (context, canGoForward, _) {
+                      return _SmoothActionButton(
+                        onTap: canGoForward ? context.read<BrowserProvider>().goForward : null,
+                        icon: Icons.arrow_forward_ios_rounded,
+                        color: canGoForward ? iconColor : secondaryIconColor,
+                      );
+                    },
                   ),
                   const SizedBox(width: 4),
-                  _SmoothActionButton(
-                    onTap: () => browserProvider.addTab(),
-                    icon: Icons.add,
-                    color: Colors.white,
-                    isFab: true,
-                    fabColor: browserProvider.themeColor,
+                  Selector<BrowserProvider, Color>(
+                    selector: (_, p) => p.themeColor,
+                    builder: (context, themeColor, _) {
+                      return _SmoothActionButton(
+                        onTap: () => context.read<BrowserProvider>().addTab(),
+                        icon: Icons.add,
+                        color: Colors.white,
+                        isFab: true,
+                        fabColor: themeColor,
+                      );
+                    },
                   ),
                   const SizedBox(width: 4),
                   _SmoothActionButton(

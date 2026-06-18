@@ -60,8 +60,11 @@ class BrowserTab {
     controller.setNavigationDelegate(
       NavigationDelegate(
         onProgress: (int progress) {
-          this.progress = progress / 100;
+          final double p = progress / 100;
+          this.progress = p;
           isLoading = progress != 100;
+          
+          // Use ValueNotifier for progress to avoid full provider rebuilds
           onStateChanged();
         },
         onPageStarted: (String url) {
@@ -106,7 +109,14 @@ class BrowserTab {
 
           onStateChanged();
         },
-        onWebResourceError: (WebResourceError error) {},
+        onWebResourceError: (WebResourceError error) {
+          debugPrint(\"WebResourceError: ${error.description}, type: ${error.errorType}, isForMainFrame: ${error.isForMainFrame}\");
+          // If it's a main frame error, we might want to show a custom error page or log it
+          if (error.isForMainFrame) {
+             isLoading = false;
+             onStateChanged();
+          }
+        },
         onNavigationRequest: (NavigationRequest request) {
           final url = request.url.toLowerCase();
           final downloadExtensions = [

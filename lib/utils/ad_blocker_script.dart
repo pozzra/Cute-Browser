@@ -9,15 +9,18 @@ const String adBlockerScript = """
   ];
 
   function removeAds() {
+    // 1. Static Ads
     adSelectors.forEach(selector => {
       const elements = document.querySelectorAll(selector);
       elements.forEach(el => {
-        el.style.display = 'none';
-        el.style.visibility = 'hidden';
+        if (el.style.display !== 'none') {
+           el.style.display = 'none';
+           el.style.visibility = 'hidden';
+        }
       });
     });
     
-    // Direct YouTube Ad Skipping
+    // 2. Direct YouTube Ad Skipping
     const skipButton = document.querySelector('.ytp-ad-skip-button') || 
                        document.querySelector('.ytp-ad-skip-button-modern') ||
                        document.querySelector('.ytp-ad-skip-button-text') ||
@@ -27,36 +30,53 @@ const String adBlockerScript = """
       skipButton.click();
     }
 
-    // Force forward video if it's an unskippable ad
+    // 3. Force forward video if it's an unskippable ad
+    // Using a more stable approach to avoid player errors
     const video = document.querySelector('video');
-    const adBeingShown = document.querySelector('.ad-showing') || 
-                        document.querySelector('.ytp-ad-player-overlay') || 
-                        document.querySelector('.ytp-ad-visit-advertiser-button');
-    if (video && adBeingShown) {
+    const adShowing = document.querySelector('.ad-showing') || 
+                     document.querySelector('.ytp-ad-player-overlay');
+                     
+    if (video && adShowing) {
         // Mute during ad for "smoothness"
         if (!video.muted) {
             video.muted = true;
             video.dataset.wasAutomuted = "true";
         }
         
+        // Speed up the ad instead of jumping to the end to avoid "Video Error"
+        if (video.playbackRate < 10) {
+            video.playbackRate = 16; 
+        }
+
+        // Still try to jump if it's safe (near end)
         if (video.duration > 0 && !isNaN(video.duration)) {
-            const isActuallyAd = document.querySelector('.ytp-ad-text') || 
-                                document.querySelector('.ytp-ad-preview-text') ||
-                                document.querySelector('.ytp-ad-skip-button');
-            if (isActuallyAd) {
-                video.currentTime = video.duration;
-            }
+             if (video.currentTime < video.duration - 0.5) {
+                video.currentTime = video.duration - 0.1;
+             }
         }
     } else if (video && video.dataset.wasAutomuted === "true") {
         video.muted = false;
+        video.playbackRate = 1;
         delete video.dataset.wasAutomuted;
     }
   }
 
-  // Run on load
+  // Initial Run
   removeAds();
 
-  // Run periodically to catch dynamic ads (faster for "smoothness")
-  setInterval(removeAds, 200);
+  // Use MutationObserver for performance instead of setInterval
+  const observer = new MutationObserver((mutations) => {
+    // Debounce calls to removeAds
+    if (window._adBlockTimeout) clearTimeout(window._adBlockTimeout);
+    window._adBlockTimeout = setTimeout(removeAds, 500);
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+  
+  // Safety fallback for very dynamic content
+  setInterval(removeAds, 5000);
 })();
 """;

@@ -58,17 +58,17 @@ class _BrowserHomeState extends State<BrowserHome> {
 
   @override
   Widget build(BuildContext context) {
-    final browserProvider = Provider.of<BrowserProvider>(context);
-
     // Security Interceptor Logic
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (browserProvider.isSafeBrowsingEnabled &&
-          !browserProvider.isSecureSite &&
-          !browserProvider.currentTab.isHomePage &&
-          browserProvider.currentUrl != "about:blank" &&
-          browserProvider.currentUrl != _lastWarnedUrl) {
-        _lastWarnedUrl = browserProvider.currentUrl;
-        _showSecurityAlert(context, browserProvider);
+      final provider = context.read<BrowserProvider>();
+      if (provider.tabs.isNotEmpty &&
+          provider.isSafeBrowsingEnabled &&
+          !provider.isSecureSite &&
+          !provider.currentTab.isHomePage &&
+          provider.currentUrl != "about:blank" &&
+          provider.currentUrl != _lastWarnedUrl) {
+        _lastWarnedUrl = provider.currentUrl;
+        _showSecurityAlert(context, provider);
       }
     });
 
@@ -78,110 +78,129 @@ class _BrowserHomeState extends State<BrowserHome> {
       appBar: const CustomAppBar(),
       body: Stack(
         children: [
-          if (browserProvider.backgroundImagePath != null)
-            Positioned.fill(
-              child: Image.file(
-                File(browserProvider.backgroundImagePath!),
-                fit: BoxFit.cover,
-              ),
-            ),
+          Selector<BrowserProvider, String?>(
+            selector: (_, provider) => provider.backgroundImagePath,
+            builder: (context, path, _) {
+              if (path == null) return const SizedBox.shrink();
+              return Positioned.fill(
+                child: Image.file(
+                  File(path),
+                  fit: BoxFit.cover,
+                ),
+              );
+            },
+          ),
           Column(
             children: [
-              ValueListenableBuilder<double>(
-                valueListenable: browserProvider.currentProgress,
-                builder: (context, progress, child) {
-                  if (progress <= 0 || progress >= 1) return const SizedBox.shrink();
-                  return LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: Colors.white10,
-                    color: browserProvider.themeColor,
-                    minHeight: 2.5,
+              Consumer<BrowserProvider>(
+                builder: (context, provider, _) {
+                  return ValueListenableBuilder<double>(
+                    valueListenable: provider.currentProgress,
+                    builder: (context, progress, child) {
+                      if (progress <= 0 || progress >= 1) return const SizedBox.shrink();
+                      return LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.white10,
+                        color: provider.themeColor,
+                        minHeight: 2.5,
+                      );
+                    },
                   );
                 },
               ),
               Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(0),
-                    topRight: Radius.circular(0),
-                  ),
-                  child: browserProvider.tabs.isEmpty
-                      ? Container(
-                          color: browserProvider.themeColor.withValues(
-                            alpha: 0.1,
-                          ),
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Image.asset(
-                                    'assets/image/logo.png',
-                                    width: 120,
-                                    height: 120,
-                                    fit: BoxFit.cover,
+                child: Selector<BrowserProvider, int>(
+                  selector: (_, provider) => provider.currentIndex,
+                  builder: (context, currentIndex, _) {
+                    return Selector<BrowserProvider, int>(
+                      selector: (_, provider) => provider.tabs.length,
+                      builder: (context, tabsLength, _) {
+                        final provider = context.read<BrowserProvider>();
+                        if (provider.tabs.isEmpty) {
+                          return Container(
+                            color: provider.themeColor.withValues(alpha: 0.1),
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Image.asset(
+                                      'assets/image/logo.png',
+                                      width: 120,
+                                      height: 120,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 20),
-                                CircularProgressIndicator(
-                                  color: browserProvider.themeColor,
-                                ),
-                              ],
+                                  const SizedBox(height: 20),
+                                  CircularProgressIndicator(
+                                    color: provider.themeColor,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        )
-                      : IndexedStack(
-                          index: browserProvider.currentIndex,
-                          children: browserProvider.tabs.map((tab) {
+                          );
+                        }
+                        return IndexedStack(
+                          index: currentIndex,
+                          children: provider.tabs.map((tab) {
                             if (tab.isHomePage) {
                               return const HomeDashboard();
                             } else {
                               return WebViewWidget(controller: tab.controller);
                             }
                           }).toList(),
-                        ),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
           ),
-          if (browserProvider.isAppStarting &&
-              browserProvider.isLoading &&
-              browserProvider.tabs.isNotEmpty &&
-              !browserProvider.currentTab.isHomePage)
-            Container(
-              color: Colors.black,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(25),
-                      child: Image.asset(
-                        'assets/image/logo.png',
-                        width: 120,
-                        height: 120,
-                        fit: BoxFit.cover,
-                      ),
+          Consumer<BrowserProvider>(
+            builder: (context, provider, _) {
+              if (provider.isAppStarting &&
+                  provider.isLoading &&
+                  provider.tabs.isNotEmpty &&
+                  !provider.currentTab.isHomePage) {
+                return Container(
+                  color: Colors.black,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(25),
+                          child: Image.asset(
+                            'assets/image/logo.png',
+                            width: 120,
+                            height: 120,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        CircularProgressIndicator(
+                          color: provider.themeColor,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          "Loading...",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 30),
-                    CircularProgressIndicator(
-                      color: browserProvider.themeColor,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "Loading...",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
       ),
       bottomNavigationBar: const BottomControls(),
