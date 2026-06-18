@@ -218,7 +218,6 @@ class BrowserTab {
     final bool isGoogleLogin = url.contains("accounts.google.com");
 
     final useDesktopUA =
-        (shouldEnableBackgroundPlay != null && shouldEnableBackgroundPlay!()) ||
         (shouldEnableDesktopMode != null && shouldEnableDesktopMode!()) ||
         isGoogleLogin;
 
