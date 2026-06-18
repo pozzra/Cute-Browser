@@ -890,16 +890,16 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _disableBackgroundMode() async {
     try {
-      await _interruptionSubscription?.cancel();
-      _interruptionSubscription = null;
+      // Do NOT cancel interruption subscription, we still want to handle phone calls in foreground!
       
       await WakelockPlus.disable();
       if (!kIsWeb && FlutterBackground.isBackgroundExecutionEnabled) {
         await FlutterBackground.disableBackgroundExecution();
       }
       
-      final session = await AudioSession.instance;
-      await session.setActive(false);
+      // Do NOT deactivate audio session, as we are likely still playing media in foreground!
+      // final session = await AudioSession.instance;
+      // await session.setActive(false);
     } catch (e) {
       debugPrint("Error disabling background mode: $e");
     }

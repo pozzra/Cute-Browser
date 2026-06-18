@@ -63,6 +63,7 @@ const String backgroundPlayScript = """
 
   const forcePlay = (v) => {
     if (userPaused) return;
+    if (v.muted) v.muted = false;
     if (v.paused && !v.ended && v.readyState > 1) {
       v.play().catch(() => {});
     }
