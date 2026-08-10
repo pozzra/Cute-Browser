@@ -53,7 +53,15 @@ class BrowserTab {
   }) {
     isHomePage =
         currentUrl == "https://www.google.com" || currentUrl == "about:blank";
-    controller = WebViewController();
+    // Allow inline media playback on iOS via creation params (the old
+    // setAllowsInlineMediaPlayback() method no longer exists in this version).
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      controller = WebViewController.fromPlatformCreationParams(
+        WebKitWebViewControllerCreationParams(allowsInlineMediaPlayback: true),
+      );
+    } else {
+      controller = WebViewController();
+    }
     if (!kIsWeb) {
       controller.setJavaScriptMode(JavaScriptMode.unrestricted);
     }
@@ -111,9 +119,9 @@ class BrowserTab {
           onStateChanged();
         },
         onWebResourceError: (WebResourceError error) {
-          debugPrint(\"WebResourceError: ${error.description}, type: ${error.errorType}, isForMainFrame: ${error.isForMainFrame}\");
+          debugPrint("WebResourceError: ${error.description}, type: ${error.errorType}, isForMainFrame: ${error.isForMainFrame}");
           // If it's a main frame error, we might want to show a custom error page or log it
-          if (error.isForMainFrame) {
+          if (error.isForMainFrame ?? false) {
              isLoading = false;
              onStateChanged();
           }
@@ -160,10 +168,8 @@ class BrowserTab {
         (controller.platform as AndroidWebViewController)
             .setMediaPlaybackRequiresUserGesture(false);
       }
-      if (controller.platform is WebKitWebViewController) {
-        (controller.platform as WebKitWebViewController)
-            .setAllowsInlineMediaPlayback(true);
-      }
+      // Note: inline media playback on iOS is configured via
+      // WebKitWebViewCreationParams when the controller is created.
 
       controller.addJavaScriptChannel(
         'PlaybackChannel',
