@@ -3,8 +3,25 @@ import 'package:google_fonts/google_fonts.dart';
 import 'colors.dart';
 
 class CuteTheme {
+  // Force the same Material look & behavior on Android and iOS.
+  static const TargetPlatform _uniformPlatform = TargetPlatform.android;
+
+  static const PageTransitionsTheme _uniformPageTransitions =
+      PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: ZoomPageTransitionsBuilder(),
+      TargetPlatform.iOS: ZoomPageTransitionsBuilder(),
+      TargetPlatform.macOS: ZoomPageTransitionsBuilder(),
+      TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+      TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+    },
+  );
+
   static ThemeData get themeData {
     return ThemeData(
+      platform: _uniformPlatform,
+      pageTransitionsTheme: _uniformPageTransitions,
       primaryColor: CuteColors.pastelPink,
       scaffoldBackgroundColor: Colors.white,
       colorScheme: const ColorScheme.light(
@@ -67,6 +84,8 @@ class CuteTheme {
 
   static ThemeData get darkThemeData {
     return ThemeData(
+      platform: _uniformPlatform,
+      pageTransitionsTheme: _uniformPageTransitions,
       primaryColor: CuteColors.pastelPink,
       scaffoldBackgroundColor: Colors.black,
       colorScheme: const ColorScheme.dark(

@@ -4,6 +4,7 @@ import 'theme/theme.dart';
 import 'providers/browser_provider.dart';
 import 'screens/browser_home.dart';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter/foundation.dart';
 import 'services/notification_service.dart';
@@ -11,6 +12,15 @@ import 'services/download_service.dart';
 import 'services/ai_service.dart';
 import 'services/update_service.dart';
 import 'screens/downloads_screen.dart';
+
+// Same scroll feel on Android and iOS (no bouncing on iOS).
+class _UniformScrollBehavior extends MaterialScrollBehavior {
+  const _UniformScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const ClampingScrollPhysics();
+}
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -71,10 +81,22 @@ class _CuteBrowserAppState extends State<CuteBrowserApp> {
   @override
   Widget build(BuildContext context) {
     final browserProvider = Provider.of<BrowserProvider>(context);
+    final isDark = browserProvider.themeMode == ThemeMode.dark ||
+        (browserProvider.themeMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
+    // Keep the status bar text readable and identical on Android & iOS.
+    SystemChrome.setSystemUIOverlayStyle(
+      isDark
+          ? SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent)
+          : SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
+    );
+
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'Cute Browser',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const _UniformScrollBehavior(),
       theme: CuteTheme.themeData,
       darkTheme: CuteTheme.darkThemeData,
       themeMode: browserProvider.themeMode,

@@ -124,7 +124,7 @@ const String backgroundPlayScript = """
     const updateMeta = () => {
       if (!navigator.mediaSession) return;
       let title = document.title.replace(' - YouTube', '');
-      let artist = \"Cute Browser\";
+      let artist = "Cute Browser";
       const sel = {
         t: ['h1.title yt-formatted-string', '.slim-video-metadata-title', '.ytm-slim-video-metadata-title', '.video-title', 'h1.watch-title-container'],
         c: ['#owner-sub-count', '.ytm-slim-owner-channel-name', '.item-channel-name', '.yt-user-info a']
@@ -134,7 +134,7 @@ const String backgroundPlayScript = """
 
       if (!navigator.mediaSession.metadata || navigator.mediaSession.metadata.title !== title || navigator.mediaSession.metadata.artist !== artist) {
         navigator.mediaSession.metadata = new MediaMetadata({
-          title, artist, album: \"Cute Browser\",
+          title, artist, album: "Cute Browser",
           artwork: [{ src: 'https://cdn-icons-png.flaticon.com/512/3670/3670163.png', sizes: '512x512', type: 'image/png' }]
         });
         if (window.PlaybackChannel) {
@@ -159,12 +159,12 @@ const String backgroundPlayScript = """
     } else if (action === 'next') {
       const btn = document.querySelector('.ytp-next-button') || 
                   document.querySelector('.next-button') ||
-                  document.querySelector('a[title*=\"Next\"]');
+                  document.querySelector('a[title*="Next"]');
       if (btn) btn.click();
     } else if (action === 'prev') {
       const btn = document.querySelector('.ytp-prev-button') || 
                   document.querySelector('.prev-button') ||
-                  document.querySelector('a[title*=\"Previous\"]');
+                  document.querySelector('a[title*="Previous"]');
       if (btn) btn.click();
       else window.history.back();
     }
