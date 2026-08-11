@@ -53,6 +53,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Disable Swift Package Manager
+        run: flutter config --no-enable-swift-package-manager
+
       - name: Build iOS (Unsigned)
         run: flutter build ios --release --no-codesign
 
