@@ -58,19 +58,23 @@ class _BrowserHomeState extends State<BrowserHome> {
 
   @override
   Widget build(BuildContext context) {
-    // Security Interceptor Logic
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<BrowserProvider>();
-      if (provider.tabs.isNotEmpty &&
-          provider.isSafeBrowsingEnabled &&
-          !provider.isSecureSite &&
-          !provider.currentTab.isHomePage &&
-          provider.currentUrl != "about:blank" &&
-          provider.currentUrl != _lastWarnedUrl) {
-        _lastWarnedUrl = provider.currentUrl;
-        _showSecurityAlert(context, provider);
-      }
-    });
+    // Security Interceptor Logic — only schedule a check when a new unsafe
+    // page is actually showing (avoids a post-frame callback on every rebuild).
+    final provider = context.read<BrowserProvider>();
+    final bool shouldCheckSecurity =
+        provider.tabs.isNotEmpty &&
+        provider.isSafeBrowsingEnabled &&
+        !provider.isSecureSite &&
+        !provider.currentTab.isHomePage &&
+        provider.currentUrl != "about:blank" &&
+        provider.currentUrl != _lastWarnedUrl;
+    if (shouldCheckSecurity) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final p = context.read<BrowserProvider>();
+        _lastWarnedUrl = p.currentUrl;
+        _showSecurityAlert(context, p);
+      });
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -141,15 +145,19 @@ class _BrowserHomeState extends State<BrowserHome> {
                             ),
                           );
                         }
-                        return IndexedStack(
-                          index: currentIndex,
-                          children: provider.tabs.map((tab) {
-                            if (tab.isHomePage) {
-                              return const HomeDashboard();
-                            } else {
-                              return WebViewWidget(controller: tab.controller);
-                            }
-                          }).toList(),
+                        return RepaintBoundary(
+                          child: IndexedStack(
+                            index: currentIndex,
+                            children: provider.tabs.map((tab) {
+                              if (tab.isHomePage) {
+                                return const HomeDashboard();
+                              } else {
+                                return RepaintBoundary(
+                                  child: WebViewWidget(controller: tab.controller),
+                                );
+                              }
+                            }).toList(),
+                          ),
                         );
                       },
                     );

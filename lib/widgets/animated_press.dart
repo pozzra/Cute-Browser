@@ -49,8 +49,8 @@ class _AnimatedPressState extends State<AnimatedPress> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
         scale: _currentScale,
-        duration: const Duration(milliseconds: 100),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 130),
+        curve: Curves.easeOutBack,
         child: widget.child,
       ),
     );

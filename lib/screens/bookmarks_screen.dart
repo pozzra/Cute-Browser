@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/browser_provider.dart';
 import '../theme/colors.dart';
 import '../widgets/animated_press.dart';
+import '../widgets/entrance_animation.dart';
 
 class BookmarksScreen extends StatelessWidget {
   const BookmarksScreen({super.key});
@@ -40,9 +41,11 @@ class BookmarksScreen extends StatelessWidget {
               itemCount: browserProvider.bookmarks.length,
               itemBuilder: (context, index) {
                 final bookmark = browserProvider.bookmarks[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: AnimatedPress(
+                return EntranceAnimation(
+                  index: index,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: AnimatedPress(
                     onTap: () {
                       browserProvider.loadUrl(bookmark.url);
                       Navigator.pop(context);
@@ -82,7 +85,8 @@ class BookmarksScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                );
+                ),
+              );
               },
             ),
       floatingActionButton: FloatingActionButton.extended(

@@ -32,22 +32,43 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    final browserProvider = Provider.of<BrowserProvider>(context);
+    // Only rebuild when the fields the bar shows actually change, so webview
+    // progress updates don't repaint the whole bar on every tick.
+    return Selector<BrowserProvider, _AppBarSnapshot>(
+      selector: (_, p) => _AppBarSnapshot(
+        themeColor: p.themeColor,
+        isLoading: p.isLoading,
+        currentUrl: p.currentUrl,
+        isHomePage: p.currentTab.isHomePage,
+        isSafeBrowsingEnabled: p.isSafeBrowsingEnabled,
+        isSecureSite: p.isSecureSite,
+        adaptiveTextColor: p.adaptiveTextColor,
+      ),
+      builder: (context, snapshot, _) {
+        final actions = Provider.of<BrowserProvider>(context, listen: false);
+        return _buildBar(
+          context,
+          snapshot,
+          actions.goHome,
+          actions.reload,
+          actions.loadUrl,
+        );
+      },
+    );
+  }
 
-    // Only update text if the user is not potentially typing, or strictly on page finish.
-    // simpler approach: Update text only if it's vastly different or on page load finish?
-    // For this demo, let's keep it simple: sync when not focused or just sync on submit.
-    // Actually, usually browsers update the URL bar when page changes.
-    // We can check if the widget's current url in controller is different from provider's
-    // AND the user isn't editing (no focus).
-    // For simplicity: We will just update it when `browserProvider.currentUrl` changes
-    // But we need to avoid overriding if user is typing.
-    // Let's just set it in a listener or creating a new controller is fine if we accept the UX glitch.
-    // BETTER FIX: Use `didUpdateWidget` or just setting it if (text != url).
-
+  Widget _buildBar(
+    BuildContext context,
+    _AppBarSnapshot browserProvider,
+    VoidCallback goHome,
+    VoidCallback reload,
+    ValueChanged<String> loadUrl,
+  ) {
+    // Only update the URL field when a page finished loading and the user is
+    // not typing, so we never clobber in-progress edits.
     if (!browserProvider.isLoading && !FocusScope.of(context).hasFocus) {
-      if (browserProvider.currentTab.isHomePage) {
-        _urlController.text = "";
+      if (browserProvider.isHomePage) {
+        if (_urlController.text.isNotEmpty) _urlController.text = "";
       } else if (_urlController.text != browserProvider.currentUrl) {
         _urlController.text = browserProvider.currentUrl;
       }
@@ -77,7 +98,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
             children: [
               _buildCircleButton(
                 icon: Icons.home_rounded,
-                onTap: browserProvider.goHome,
+                onTap: goHome,
+                iconColor: browserProvider.adaptiveTextColor,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -97,7 +119,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   child: TextField(
                     controller: _urlController,
                     onSubmitted: (value) {
-                      browserProvider.loadUrl(value);
+                      loadUrl(value);
                       FocusScope.of(context).unfocus();
                     },
                     decoration: InputDecoration(
@@ -143,7 +165,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                 Icons.refresh_rounded,
                                 color: CuteColors.lightText,
                               ),
-                              onPressed: browserProvider.reload,
+                              onPressed: reload,
                             ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -183,6 +205,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     MaterialPageRoute(builder: (_) => const BookmarksScreen()),
                   );
                 },
+                iconColor: browserProvider.adaptiveTextColor,
               ),
             ],
           ),
@@ -194,6 +217,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget _buildCircleButton({
     required IconData icon,
     required VoidCallback onTap,
+    required Color iconColor,
   }) {
     return AnimatedPress(
       onTap: onTap,
@@ -205,10 +229,52 @@ class _CustomAppBarState extends State<CustomAppBar> {
         ),
         child: Icon(
           icon,
-          color: Provider.of<BrowserProvider>(context).adaptiveTextColor,
+          color: iconColor,
           size: 24,
         ),
       ),
     );
   }
+}
+
+class _AppBarSnapshot {
+  final Color themeColor;
+  final bool isLoading;
+  final String currentUrl;
+  final bool isHomePage;
+  final bool isSafeBrowsingEnabled;
+  final bool isSecureSite;
+  final Color adaptiveTextColor;
+
+  const _AppBarSnapshot({
+    required this.themeColor,
+    required this.isLoading,
+    required this.currentUrl,
+    required this.isHomePage,
+    required this.isSafeBrowsingEnabled,
+    required this.isSecureSite,
+    required this.adaptiveTextColor,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      other is _AppBarSnapshot &&
+      other.themeColor == themeColor &&
+      other.isLoading == isLoading &&
+      other.currentUrl == currentUrl &&
+      other.isHomePage == isHomePage &&
+      other.isSafeBrowsingEnabled == isSafeBrowsingEnabled &&
+      other.isSecureSite == isSecureSite &&
+      other.adaptiveTextColor == adaptiveTextColor;
+
+  @override
+  int get hashCode => Object.hash(
+        themeColor,
+        isLoading,
+        currentUrl,
+        isHomePage,
+        isSafeBrowsingEnabled,
+        isSecureSite,
+        adaptiveTextColor,
+      );
 }

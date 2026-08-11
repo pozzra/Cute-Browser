@@ -6,117 +6,70 @@ class CuteTheme {
   // Force the same Material look & behavior on Android and iOS.
   static const TargetPlatform _uniformPlatform = TargetPlatform.android;
 
+  // Modern, identical page transitions on every platform.
   static const PageTransitionsTheme _uniformPageTransitions =
       PageTransitionsTheme(
     builders: {
-      TargetPlatform.android: ZoomPageTransitionsBuilder(),
-      TargetPlatform.iOS: ZoomPageTransitionsBuilder(),
-      TargetPlatform.macOS: ZoomPageTransitionsBuilder(),
-      TargetPlatform.windows: ZoomPageTransitionsBuilder(),
-      TargetPlatform.linux: ZoomPageTransitionsBuilder(),
-      TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+      TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.iOS: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
     },
   );
 
-  static ThemeData get themeData {
-    return ThemeData(
-      platform: _uniformPlatform,
-      pageTransitionsTheme: _uniformPageTransitions,
-      primaryColor: CuteColors.pastelPink,
-      scaffoldBackgroundColor: Colors.white,
-      colorScheme: const ColorScheme.light(
-        primary: CuteColors.pastelPink,
-        secondary: CuteColors.softPurple,
-        surface: Colors.white,
-        onSurface: Colors.black,
-        error: CuteColors.errorPink,
-        onError: Colors.white,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.black),
-        titleTextStyle: TextStyle(
-          color: Colors.black,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      iconTheme: const IconThemeData(
-        color: Colors.black,
-      ),
-      textTheme: GoogleFonts.nunitoTextTheme().apply(
-        bodyColor: Colors.black,
-        displayColor: Colors.black,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: CuteColors.pastelPink, width: 2),
-        ),
-        hintStyle: const TextStyle(color: CuteColors.lightText),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: CuteColors.pastelPink,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          elevation: 2,
-        ),
-      ),
-      useMaterial3: true,
-    );
-  }
+  // Pre-computed once so the app boots fast (avoids repeated font/layout work).
+  static final ThemeData themeData = _buildTheme(isDark: false);
+  static final ThemeData darkThemeData = _buildTheme(isDark: true);
 
-  static ThemeData get darkThemeData {
+  static ThemeData _buildTheme({required bool isDark}) {
+    final Color textColor = isDark ? Colors.white : Colors.black;
+    final Color inputFill = isDark ? CuteColors.darkSurface : Colors.white;
+    final Color hintColor = isDark ? CuteColors.darkSubText : CuteColors.lightText;
+
     return ThemeData(
       platform: _uniformPlatform,
       pageTransitionsTheme: _uniformPageTransitions,
       primaryColor: CuteColors.pastelPink,
-      scaffoldBackgroundColor: Colors.black,
-      colorScheme: const ColorScheme.dark(
-        primary: CuteColors.pastelPink,
-        secondary: CuteColors.softPurple,
-        surface: Colors.black,
-        onSurface: Colors.white,
-        error: CuteColors.darkErrorPink,
-        onError: Colors.white,
-      ),
-      appBarTheme: const AppBarTheme(
+      scaffoldBackgroundColor: isDark ? Colors.black : Colors.white,
+      colorScheme: isDark
+          ? const ColorScheme.dark(
+              primary: CuteColors.pastelPink,
+              secondary: CuteColors.softPurple,
+              surface: Colors.black,
+              onSurface: Colors.white,
+              error: CuteColors.darkErrorPink,
+              onError: Colors.white,
+            )
+          : const ColorScheme.light(
+              primary: CuteColors.pastelPink,
+              secondary: CuteColors.softPurple,
+              surface: Colors.white,
+              onSurface: Colors.black,
+              error: CuteColors.errorPink,
+              onError: Colors.white,
+            ),
+      splashFactory: InkSparkle.splashFactory,
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: textColor),
         titleTextStyle: TextStyle(
-          color: Colors.white,
+          color: textColor,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),
-      iconTheme: const IconThemeData(
-        color: Colors.white,
-      ),
+      iconTheme: IconThemeData(color: textColor),
       textTheme: GoogleFonts.nunitoTextTheme().apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
+        bodyColor: textColor,
+        displayColor: textColor,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: CuteColors.darkSurface,
+        fillColor: inputFill,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,
@@ -129,7 +82,7 @@ class CuteTheme {
           borderRadius: BorderRadius.circular(30),
           borderSide: const BorderSide(color: CuteColors.pastelPink, width: 2),
         ),
-        hintStyle: const TextStyle(color: CuteColors.darkSubText),
+        hintStyle: TextStyle(color: hintColor),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

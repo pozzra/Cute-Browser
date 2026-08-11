@@ -308,7 +308,9 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               title: const Text("Share"),
               onTap: () {
                 Navigator.pop(context);
-                Share.shareXFiles([XFile(item.path)], text: item.fileName);
+                SharePlus.instance.share(
+                  ShareParams(files: [XFile(item.path)], text: item.fileName),
+                );
               },
             ),
             ListTile(

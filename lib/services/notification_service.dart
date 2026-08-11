@@ -24,7 +24,7 @@ class NotificationService {
         InitializationSettings(android: initializationSettingsAndroid);
 
     await _notificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (details) {
         if (details.id != null) {
           _onActionStream.add(
@@ -92,7 +92,12 @@ class NotificationService {
       android: androidDetails,
     );
 
-    await _notificationsPlugin.show(id, title, body, notificationDetails);
+    await _notificationsPlugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
+    );
   }
 
   static Future<void> showDownloadProgress({
@@ -131,17 +136,17 @@ class NotificationService {
     );
 
     await _notificationsPlugin.show(
-      id,
-      title,
-      progress == maxProgress
+      id: id,
+      title: title,
+      body: progress == maxProgress
           ? 'Download Complete'
           : 'Downloading... $progress%',
-      notificationDetails,
+      notificationDetails: notificationDetails,
       payload: 'downloads_screen',
     );
   }
 
   static Future<void> cancel(int id) async {
-    await _notificationsPlugin.cancel(id);
+    await _notificationsPlugin.cancel(id: id);
   }
 }

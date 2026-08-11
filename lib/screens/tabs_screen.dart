@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/browser_provider.dart';
 import '../theme/colors.dart';
-// ignore: unused_import
-import '../widgets/animated_press.dart';
+import '../widgets/entrance_animation.dart';
 
 class TabsScreen extends StatelessWidget {
   const TabsScreen({super.key});
@@ -51,12 +50,16 @@ class TabsScreen extends StatelessWidget {
               final tab = browserProvider.tabs[index];
               final isSelected = index == browserProvider.currentIndex;
 
-              return GestureDetector(
-                onTap: () {
-                  browserProvider.changeTab(index);
-                  Navigator.pop(context);
-                },
-                child: Container(
+              return EntranceAnimation(
+                index: index,
+                offset: 16,
+                duration: const Duration(milliseconds: 350),
+                child: GestureDetector(
+                  onTap: () {
+                    browserProvider.changeTab(index);
+                    Navigator.pop(context);
+                  },
+                  child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -158,6 +161,7 @@ class TabsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+              ),
               );
             },
           );

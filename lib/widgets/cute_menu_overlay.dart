@@ -156,7 +156,9 @@ class CuteMenuOverlay extends StatelessWidget {
                       final url = browserProvider.currentUrl;
                       final title = browserProvider.currentTitle;
                       if (url.isNotEmpty && url != "about:blank") {
-                        Share.share('$title\n$url');
+                        SharePlus.instance.share(
+                          ShareParams(text: '$title\n$url'),
+                        );
                       }
                       Navigator.pop(context);
                     },
@@ -232,7 +234,7 @@ class CuteMenuOverlay extends StatelessWidget {
                 shortcut,
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
-            if (trailing != null) trailing,
+            ?trailing,
             if (showArrow)
               Icon(
                 Icons.chevron_right_rounded,
