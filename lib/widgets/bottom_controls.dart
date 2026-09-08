@@ -70,6 +70,13 @@ class BottomControls extends StatelessWidget {
                         color: const Color(0xFFE2B2F2), // Pastel Purple
                         size: 40,
                       ),
+                      const SizedBox(width: 10),
+                      _PlaybackButton(
+                        onTap: browserProvider.togglePiP,
+                        icon: Icons.picture_in_picture_rounded,
+                        color: const Color(0xFFB2F2CC), // Pastel Green
+                        size: 40,
+                      ),
                     ],
                   ),
                 );

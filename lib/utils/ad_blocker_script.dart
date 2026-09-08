@@ -21,10 +21,15 @@ const String adBlockerScript = """
     });
     
     // 2. Direct YouTube Ad Skipping
-    const skipButton = document.querySelector('.ytp-ad-skip-button') || 
-                       document.querySelector('.ytp-ad-skip-button-modern') ||
-                       document.querySelector('.ytp-ad-skip-button-text') ||
-                       document.querySelector('.ytp-skip-ad-button');
+    const skipSelectors = [
+      '.ytp-ad-skip-button',
+      '.ytp-ad-skip-button-modern',
+      '.ytp-ad-skip-button-text',
+      '.ytp-skip-ad-button',
+      '.ytp-ad-skip-button-slot',
+      '.ytp-ad-skip-button-container'
+    ];
+    const skipButton = skipSelectors.map(s => document.querySelector(s)).find(el => el !== null);
     if (skipButton) {
       console.log("CuteBrowser: YouTube Ad detected, clicking skip!");
       skipButton.click();

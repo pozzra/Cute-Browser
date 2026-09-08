@@ -286,6 +286,24 @@ class BrowserTab {
     controller.runJavaScript("if(window.cutePlayAction) window.cutePlayAction('prev');");
   }
 
+  void togglePiP() {
+    controller.runJavaScript("""
+      (async function() {
+        const video = document.querySelector('video');
+        if (!video) return;
+        try {
+          if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+          } else {
+            await video.requestPictureInPicture();
+          }
+        } catch (e) {
+          console.error('PiP failed:', e);
+        }
+      })();
+    """);
+  }
+
   void dispose() {
     try {
       // Clear the underlying native webview to stop background play and free memory
@@ -1096,5 +1114,9 @@ class BrowserProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   void previousVideo() {
     currentTab.previousVideo();
+  }
+
+  void togglePiP() {
+    currentTab.togglePiP();
   }
 }
