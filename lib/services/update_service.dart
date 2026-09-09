@@ -121,7 +121,7 @@ class UpdateService {
               _startDownload(context, url, version);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: CuteColors.pastelPink,
+              backgroundColor: CuteColors.primary,
             ),
             child: const Text(
               "Download & Install",
@@ -174,7 +174,7 @@ class UpdateService {
                     value: progress,
                     backgroundColor: Colors.grey[200],
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      CuteColors.softPurple,
+                      CuteColors.secondary,
                     ),
                   ),
                   const SizedBox(height: 16),

@@ -201,8 +201,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
               ),
             ),
           ),
-        );
-      }
+        ),
+      );
+    }
 
   Widget _buildCircleButton({
     required IconData icon,

@@ -98,7 +98,7 @@ class BookmarksScreen extends StatelessWidget {
              );
           }
         },
-        backgroundColor: CuteColors.pastelPink,
+        backgroundColor: CuteColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text("Add Current Page", style: TextStyle(color: Colors.white)),
       ),

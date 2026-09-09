@@ -76,7 +76,7 @@ class CuteMenuOverlay extends StatelessWidget {
               _buildToggleItem(
                 context,
                 "Ad Blocker",
-                Icons.block_flipped_rounded,
+                Icons.block_rounded,
                 browserProvider.isAdBlockEnabled,
                 (val) => browserProvider.toggleAdBlock(val),
               ),

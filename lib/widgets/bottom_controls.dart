@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../providers/browser_provider.dart';
-import '../screens\tabs_screen.dart';
+import '../screens/tabs_screen.dart';
 import 'cute_menu_overlay.dart';
 import 'animated_press.dart';
 import '../theme/colors.dart';
@@ -155,7 +155,7 @@ class BottomControls extends StatelessWidget {
                       const SizedBox(width: 8),
                       _SmoothActionButton(
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const TabsScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => TabsScreen()));
                         },
                         icon: Icons.grid_view_rounded,
                         color: iconColor,
