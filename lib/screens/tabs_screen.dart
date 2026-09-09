@@ -10,12 +10,14 @@ class TabsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final browserProvider = Provider.of<BrowserProvider>(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: CuteColors.cream,
+      backgroundColor: isDark ? CuteColors.darkBackground : Colors.white,
       appBar: AppBar(
         title: const Text("Tabs"),
-        backgroundColor: CuteColors.cream,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
@@ -61,16 +63,16 @@ class TabsScreen extends StatelessWidget {
                   },
                   child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
                     border: isSelected
-                        ? Border.all(color: CuteColors.pastelPink, width: 3)
-                        : null,
-                    boxShadow: const [
+                        ? Border.all(color: CuteColors.primary, width: 3)
+                        : Border.all(color: Colors.transparent, width: 3),
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 5,
-                        offset: Offset(0, 2),
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -83,11 +85,11 @@ class TabsScreen extends StatelessWidget {
                             height: 30,
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? CuteColors.pastelPink
-                                  : Colors.grey[200],
+                                  ? CuteColors.primary
+                                  : Colors.grey.withValues(alpha: 0.2),
                               borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                topRight: Radius.circular(10),
+                                topLeft: Radius.circular(17),
+                                topRight: Radius.circular(17),
                               ),
                             ),
                             child: Center(
@@ -101,7 +103,7 @@ class TabsScreen extends StatelessWidget {
                                   style: TextStyle(
                                     color: isSelected
                                         ? Colors.white
-                                        : CuteColors.darkText,
+                                        : theme.colorScheme.onSurface,
                                     fontWeight: FontWeight.bold,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -118,7 +120,7 @@ class TabsScreen extends StatelessWidget {
                                   const Icon(
                                     Icons.web_asset,
                                     size: 48,
-                                    color: CuteColors.softPurple,
+                                    color: CuteColors.secondary,
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
@@ -132,6 +134,7 @@ class TabsScreen extends StatelessWidget {
                                     ),
                                   ),
                                 ],
+                                ),
                               ),
                             ),
                           ),
@@ -171,7 +174,7 @@ class TabsScreen extends StatelessWidget {
         onPressed: () => Navigator.pop(context),
         label: const Text("Done", style: TextStyle(color: Colors.white)),
         icon: const Icon(Icons.check, color: Colors.white),
-        backgroundColor: CuteColors.pastelPink,
+        backgroundColor: CuteColors.primary,
       ),
     );
   }
