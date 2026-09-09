@@ -16,45 +16,6 @@ class HomeDashboard extends StatefulWidget {
 class _HomeDashboardState extends State<HomeDashboard> {
   final TextEditingController _searchController = TextEditingController();
 
-  final List<Map<String, String>> shortcuts = [
-    {
-      'name': 'Google',
-      'url': 'https://www.google.com',
-      'icon': '🔍',
-      'color': '0xFFFFB7B2',
-    },
-    {
-      'name': 'YouTube',
-      'url': 'https://www.youtube.com',
-      'icon': '📺',
-      'color': '0xFFFFE1AF',
-    },
-    {
-      'name': 'Facebook',
-      'url': 'https://www.facebook.com',
-      'icon': '👥',
-      'color': '0xFFB2E2F2',
-    },
-    {
-      'name': 'Instagram',
-      'url': 'https://www.instagram.com',
-      'icon': '📸',
-      'color': '0xFFE2B2F2',
-    },
-    {
-      'name': 'Twitter',
-      'url': 'https://www.twitter.com',
-      'icon': '🐦',
-      'color': '0xFFB2F2CC',
-    },
-    {
-      'name': 'GitHub',
-      'url': 'https://www.github.com',
-      'icon': '💻',
-      'color': '0xFFD1D1D1',
-    },
-  ];
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -88,9 +49,9 @@ class _HomeDashboardState extends State<HomeDashboard> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark 
-            ? [Colors.black, Colors.black87, browserProvider.themeColor.withValues(alpha: 0.1)]
-            : [Colors.white, browserProvider.themeColor.withValues(alpha: 0.05), browserProvider.themeColor.withValues(alpha: 0.15)],
+          colors: isDark
+            ? [CuteColors.darkBackground, CuteColors.darkSurface, CuteColors.primary.withValues(alpha: 0.05)]
+            : [Colors.white, CuteColors.primary.withValues(alpha: 0.05), CuteColors.secondary.withValues(alpha: 0.1)],
         ),
       ),
       child: SafeArea(
@@ -99,7 +60,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              // Logo or Header with Animation
+              // --- Header Section ---
               TweenAnimationBuilder<double>(
                 tween: Tween<double>(begin: 0, end: 1),
                 duration: const Duration(milliseconds: 800),
@@ -115,136 +76,152 @@ class _HomeDashboardState extends State<HomeDashboard> {
                 child: Column(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: browserProvider.themeColor.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                            color: CuteColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
                           ),
                         ],
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(24),
                         child: Image.asset(
                           'assets/image/logo.png',
-                          height: 80,
-                          width: 80,
+                          height: 90,
+                          width: 90,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Container(
-                            height: 80,
-                            width: 80,
+                            height: 90,
+                            width: 90,
                             decoration: BoxDecoration(
-                              color: browserProvider.themeColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(20),
+                              color: CuteColors.primary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(24),
                             ),
-                            child: Icon(Icons.auto_awesome, color: browserProvider.themeColor, size: 40),
+                            child: Icon(Icons.auto_awesome, color: CuteColors.primary, size: 44),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     Text(
                       _getGreeting(),
-                      style: TextStyle(
-                        fontSize: 24,
+                      style: theme.textTheme.displayLarge?.copyWith(
+                        color: browserProvider.adaptiveTextColor,
                         fontWeight: FontWeight.w800,
-                        color: browserProvider.adaptiveTextColor == Colors.white 
-                            ? Colors.white 
-                            : CuteColors.darkText,
-                        letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
-                      "Spread a little sparkle today! ✨",
+                      "Ready for some magical browsing? ✨",
                       style: TextStyle(
-                        color: browserProvider.adaptiveTextColor == Colors.white
-                            ? Colors.white70
-                            : CuteColors.lightText,
-                        fontSize: 14,
+                        color: browserProvider.adaptiveTextColor.withValues(alpha: 0.7),
+                        fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 48),
 
-              // Glassmorphism Search Bar
+              // --- Premium Glass Search Bar ---
               ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(28),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(20),
+                      color: isDark ? CuteColors.surfaceDark : CuteColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: isDark ? CuteColors.glassBorderDark : CuteColors.glassBorderLight,
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          blurRadius: 25,
+                          offset: const Offset(0, 12),
                         ),
                       ],
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      onSubmitted: _onSearch,
-                      decoration: InputDecoration(
-                        hintText: "Search anything cute...",
-                        hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey[600]),
-                        prefixIcon: Icon(
-                          Icons.search_rounded,
-                          color: browserProvider.themeColor,
-                          size: 26,
+                    child: Stack(
+                      children: [
+                        // Subtle Reflection Gradient
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(28),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.white.withValues(alpha: 0.1),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 18,
+                        TextField(
+                          controller: _searchController,
+                          onSubmitted: _onSearch,
+                          style: TextStyle(color: browserProvider.adaptiveTextColor),
+                          decoration: InputDecoration(
+                            hintText: "Search something magical...",
+                            hintStyle: TextStyle(
+                              color: isDark ? Colors.white54 : Colors.grey[500],
+                              fontWeight: FontWeight.w400,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search_rounded,
+                              color: CuteColors.primary,
+                              size: 28,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 20,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 56),
 
-              // Shortcuts Grid with entry animation
+              // --- Shortcuts Section ---
               Align(
                 alignment: Alignment.centerLeft,
                 child: Row(
                   children: [
                     Container(
-                      width: 4,
-                      height: 18,
+                      width: 5,
+                      height: 24,
                       decoration: BoxDecoration(
-                        color: browserProvider.themeColor,
+                        color: CuteColors.primary,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Text(
-                      "Quick Links",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
+                      "Quick Magic",
+                      style: theme.textTheme.titleLarge?.copyWith(
                         color: browserProvider.adaptiveTextColor,
-                        letterSpacing: -0.5,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              _buildStaggeredGrid(browserProvider),
+              const SizedBox(height: 24),
+              _buildModernGrid(browserProvider),
               const SizedBox(height: 40),
             ],
           ),
@@ -253,24 +230,24 @@ class _HomeDashboardState extends State<HomeDashboard> {
     );
   }
 
-  Widget _buildStaggeredGrid(BrowserProvider browserProvider) {
+  Widget _buildModernGrid(BrowserProvider browserProvider) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 10,
+        crossAxisCount: 3,
+        crossAxisSpacing: 16,
         mainAxisSpacing: 20,
-        childAspectRatio: 0.8,
+        childAspectRatio: 1.1,
       ),
       itemCount: browserProvider.shortcuts.length,
       itemBuilder: (context, index) {
         final shortcut = browserProvider.shortcuts[index];
-        final color = Color(int.parse(shortcut.color));
+        final Color accentColor = Color(int.parse(shortcut.color));
 
         return TweenAnimationBuilder<double>(
           tween: Tween<double>(begin: 0, end: 1),
-          duration: Duration(milliseconds: 400 + (index * 100)),
+          duration: Duration(milliseconds: 500 + (index * 100)),
           builder: (context, value, child) {
             return Transform.scale(
               scale: value,
@@ -281,46 +258,72 @@ class _HomeDashboardState extends State<HomeDashboard> {
             );
           },
           child: AnimatedPress(
-            onTap: () {
-              browserProvider.loadUrl(shortcut.url);
-            },
+            onTap: () => browserProvider.loadUrl(shortcut.url),
             child: GestureDetector(
               onLongPress: () {
                 HapticFeedback.mediumImpact();
                 _showRemoveDialog(context, browserProvider, shortcut, index);
               },
-              child: Column(
-                children: [
-                  Container(
-                    width: 55,
-                    height: 55,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: color.withValues(alpha: 0.3),
-                        width: 1,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      accentColor.withValues(alpha: 0.2),
+                      accentColor.withValues(alpha: 0.05),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.1),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: accentColor.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          shortcut.icon,
+                          style: const TextStyle(fontSize: 26),
+                        ),
                       ),
                     ),
-                    child: Center(
-                      child: Text(
-                        shortcut.icon,
-                        style: const TextStyle(fontSize: 28),
+                    const SizedBox(height: 12),
+                    Text(
+                      shortcut.name,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: browserProvider.adaptiveTextColor,
+                        fontWeight: FontWeight.w700,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    shortcut.name,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: browserProvider.adaptiveTextColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -334,7 +337,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text("Remove Shortcut?"),
         content: Text("Do you want to remove ${shortcut.name} from your quick links?"),
         actions: [

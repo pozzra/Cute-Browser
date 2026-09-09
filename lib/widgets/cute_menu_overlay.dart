@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'dart:ui';
 import '../providers/browser_provider.dart';
-import '../screens/history_screen.dart';
-import '../screens/bookmarks_screen.dart';
-import '../services/update_service.dart';
-import '../screens/downloads_screen.dart';
+import '../theme/colors.dart';
 import 'animated_press.dart';
 
 class CuteMenuOverlay extends StatelessWidget {
@@ -15,382 +12,288 @@ class CuteMenuOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final browserProvider = Provider.of<BrowserProvider>(context);
     final theme = Theme.of(context);
-    final backgroundColor = theme.colorScheme.surface;
-    final dividerColor = theme.dividerColor;
-    final textColor = theme.colorScheme.onSurface;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildMenuItem(
-              context,
-              icon: Icons.add_box_outlined,
-              title: "New tab",
-              onTap: () {
-                browserProvider.addTab();
-                Navigator.pop(context);
-              },
-            ),
-            Divider(color: dividerColor),
-            _buildMenuItem(
-              context,
-              icon: Icons.history_rounded,
-              title: "History",
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HistoryScreen()),
-                );
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.download_outlined,
-              title: "Downloads",
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DownloadsScreen()),
-                );
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.bookmarks_outlined,
-              title: "Bookmarks",
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BookmarksScreen()),
-                );
-              },
-            ),
-            Divider(color: dividerColor),
-            // Expanded Settings Section
-            _buildThemeModeSelector(context),
-            _buildToggleItem(
-              context,
-              icon: Icons.block_rounded,
-              title: "Ad Block",
-              value: browserProvider.isAdBlockEnabled,
-              onChanged: (val) => browserProvider.toggleAdBlock(val),
-            ),
-            _buildToggleItem(
-              context,
-              icon: Icons.music_note_rounded,
-              title: "Background Play",
-              value: browserProvider.isBackgroundPlayEnabled,
-              onChanged: (val) => browserProvider.toggleBackgroundPlay(val),
-            ),
-            _buildToggleItem(
-              context,
-              icon: Icons.security_rounded,
-              title: "Safe Browsing",
-              value: browserProvider.isSafeBrowsingEnabled,
-              onChanged: (val) => browserProvider.toggleSafeBrowsing(val),
-            ),
-            _buildToggleItem(
-              context,
-              icon: Icons.desktop_mac_rounded,
-              title: "Desktop Mode",
-              value: browserProvider.isDesktopMode,
-              onChanged: (val) => browserProvider.toggleDesktopMode(val),
-            ),
-            Divider(color: dividerColor),
-            _buildMenuItem(
-              context,
-              icon: Icons.system_update_alt_rounded,
-              title: "Check for updates",
-              onTap: () {
-                Navigator.pop(context);
-                UpdateService.checkAndPromptUpdate(context);
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.home_rounded,
-              title: "Home",
-              onTap: () {
-                Navigator.pop(context);
-                browserProvider.goHome();
-              },
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  AnimatedPress(
-                    onTap: () {
-                      browserProvider.goBack();
-                      Navigator.pop(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(Icons.arrow_back_rounded, color: textColor),
-                    ),
-                  ),
-                  AnimatedPress(
-                    onTap: () {
-                      final url = browserProvider.currentUrl;
-                      final title = browserProvider.currentTitle;
-                      if (url.isNotEmpty && url != "about:blank") {
-                        SharePlus.instance.share(
-                          ShareParams(text: '$title\n$url'),
-                        );
-                      }
-                      Navigator.pop(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(Icons.share_outlined, color: textColor),
-                    ),
-                  ),
-                  AnimatedPress(
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const DownloadsScreen(),
-                        ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(Icons.download_rounded, color: textColor),
-                    ),
-                  ),
-                  AnimatedPress(
-                    onTap: () {
-                      browserProvider.reload();
-                      Navigator.pop(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(Icons.refresh_rounded, color: textColor),
-                    ),
-                  ),
-                ],
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          decoration: BoxDecoration(
+            color: isDark ? CuteColors.surfaceDark : CuteColors.surfaceLight,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border(
+              top: BorderSide(
+                color: isDark ? CuteColors.glassBorderDark : CuteColors.glassBorderLight,
+                width: 1.5,
               ),
             ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    String? shortcut,
-    bool showArrow = false,
-    Color? textColor,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    final theme = Theme.of(context);
-    final itemTextColor = textColor ?? theme.colorScheme.onSurface;
-
-    return AnimatedPress(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            Icon(icon, color: itemTextColor, size: 20),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(color: itemTextColor, fontSize: 13),
-              ),
-            ),
-            if (shortcut != null)
-              Text(
-                shortcut,
-                style: TextStyle(color: Colors.grey[500], fontSize: 12),
-              ),
-            ?trailing,
-            if (showArrow)
-              Icon(
-                Icons.chevron_right_rounded,
-                color: Colors.grey[500],
-                size: 20,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToggleItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    final browserProvider = Provider.of<BrowserProvider>(
-      context,
-      listen: false,
-    );
-    final theme = Theme.of(context);
-    final textColor = theme.colorScheme.onSurface;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
-      child: Row(
-        children: [
-          Icon(icon, color: textColor, size: 20),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(color: textColor, fontSize: 13),
-            ),
-          ),
-          Text(
-            value ? "On" : "Off",
-            style: TextStyle(
-              color: value ? browserProvider.themeColor : Colors.grey[500],
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Transform.scale(
-            scale: 0.75,
-            child: Switch(
-              value: value,
-              onChanged: onChanged,
-              activeThumbColor: browserProvider.themeColor,
-              activeTrackColor: browserProvider.themeColor.withValues(
-                alpha: 0.3,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  Widget _buildThemeModeSelector(BuildContext context) {
-    final browserProvider = Provider.of<BrowserProvider>(context);
-    final theme = Theme.of(context);
-    final textColor = theme.colorScheme.onSurface;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Theme Mode",
-            style: TextStyle(
-              color: textColor,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildModeOption(
-                context,
-                icon: Icons.light_mode_rounded,
-                label: "Light",
-                isSelected: browserProvider.themeMode == ThemeMode.light,
-                onTap: () => browserProvider.updateThemeMode(ThemeMode.light),
-              ),
-              _buildModeOption(
-                context,
-                icon: Icons.dark_mode_rounded,
-                label: "Dark",
-                isSelected: browserProvider.themeMode == ThemeMode.dark,
-                onTap: () => browserProvider.updateThemeMode(ThemeMode.dark),
-              ),
-              _buildModeOption(
-                context,
-                icon: Icons.brightness_auto_rounded,
-                label: "System",
-                isSelected: browserProvider.themeMode == ThemeMode.system,
-                onTap: () => browserProvider.updateThemeMode(ThemeMode.system),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 30,
+                offset: const Offset(0, -10),
               ),
             ],
           ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- Handle ---
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // --- Header ---
+              Text(
+                "Settings & More",
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // --- Theme Selector ---
+              _buildSectionTitle("Appearance"),
+              const SizedBox(height: 12),
+              _buildThemeSelector(context, browserProvider),
+              const SizedBox(height: 24),
+
+              // --- Feature Toggles ---
+              _buildSectionTitle("Features"),
+              const SizedBox(height: 12),
+              _buildToggleItem(
+                context,
+                "Ad Blocker",
+                Icons.block_flipped_rounded,
+                browserProvider.isAdBlockEnabled,
+                (val) => browserProvider.toggleAdBlock(val),
+              ),
+              _buildToggleItem(
+                context,
+                "Background Play",
+                Icons.play_circle_outline_rounded,
+                browserProvider.isBackgroundPlayEnabled,
+                (val) => browserProvider.toggleBackgroundPlay(val),
+              ),
+              _buildToggleItem(
+                context,
+                "Desktop Mode",
+                Icons.desktop_windows_rounded,
+                browserProvider.isDesktopMode,
+                (val) => browserProvider.toggleDesktopMode(val),
+              ),
+              _buildToggleItem(
+                context,
+                "Safe Browsing",
+                Icons.security_rounded,
+                browserProvider.isSafeBrowsingEnabled,
+                (val) => browserProvider.toggleSafeBrowsing(val),
+              ),
+              const SizedBox(height: 32),
+
+              // --- Action Bar ---
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _ActionButton(
+                      icon: Icons.arrow_back_rounded,
+                      label: "Back",
+                      onTap: () => Navigator.pop(context),
+                      color: theme.colorScheme.primary,
+                    ),
+                    _ActionButton(
+                      icon: Icons.share_rounded,
+                      label: "Share",
+                      onTap: () => Navigator.pop(context),
+                      color: CuteColors.secondary,
+                    ),
+                    _ActionButton(
+                      icon: Icons.download_rounded,
+                      label: "Save",
+                      onTap: () => Navigator.pop(context),
+                      color: CuteColors.tertiary,
+                    ),
+                    _ActionButton(
+                      icon: Icons.refresh_rounded,
+                      label: "Reset",
+                      onTap: () => Navigator.pop(context),
+                      color: CuteColors.highlight,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: CuteColors.lightText,
+        letterSpacing: 1,
+      ),
+    );
+  }
+
+  Widget _buildThemeSelector(BuildContext context, BrowserProvider provider) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          _buildThemeOption(context, provider, ThemeMode.light, "Light", Icons.wb_sunny_rounded),
+          _buildThemeOption(context, provider, ThemeMode.system, "System", Icons.settings_suggest_rounded),
+          _buildThemeOption(context, provider, ThemeMode.dark, "Dark", Icons.nightlight_round),
         ],
       ),
     );
   }
 
-  Widget _buildModeOption(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final themeColor = Provider.of<BrowserProvider>(context).themeColor;
-
+  Widget _buildThemeOption(BuildContext context, BrowserProvider provider, ThemeMode mode, String label, IconData icon) {
+    final isSelected = provider.themeMode == mode;
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
+      child: AnimatedPress(
+        onTap: () => provider.updateThemeMode(mode),
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? themeColor.withValues(alpha: 0.15) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? themeColor : Colors.grey[300]!,
-              width: 1.5,
-            ),
+            color: isSelected ? CuteColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: isSelected
+                ? [BoxShadow(color: CuteColors.primary.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))]
+                : [],
           ),
           child: Column(
             children: [
-              Icon(
-                icon,
-                color: isSelected ? themeColor : Colors.grey[600],
-                size: 20,
-              ),
-              const SizedBox(height: 2),
+              Icon(icon, size: 20, color: isSelected ? Colors.white : provider.adaptiveTextColor),
+              const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11,
-                  color: isSelected ? themeColor : Colors.grey[600],
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? Colors.white : provider.adaptiveTextColor,
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildToggleItem(BuildContext context, String label, IconData icon, bool value, Function(bool) onChanged) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: theme.brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: theme.brightness == Brightness.dark ? Colors.white10 : Colors.black12,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: CuteColors.primary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
+              ),
+            ),
+            Transform.scale(
+              scale: 0.8,
+              child: Switch(
+                value: value,
+                onChanged: onChanged,
+                activeColor: CuteColors.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color color;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPress(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
+          ),
+        ],
       ),
     );
   }

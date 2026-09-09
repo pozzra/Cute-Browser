@@ -18,7 +18,7 @@ class EntranceAnimation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final curve = Curves.easeOutCubic;
+    final curve = Curves.elasticOut;
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
       duration: duration + Duration(milliseconds: index * 60),

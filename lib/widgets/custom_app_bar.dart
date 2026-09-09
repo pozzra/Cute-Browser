@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:ui';
 import '../providers/browser_provider.dart';
 import '../theme/colors.dart';
 import '../screens/bookmarks_screen.dart';
@@ -9,7 +10,7 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
 
   @override
-  Size get preferredSize => const Size.fromHeight(70);
+  Size get preferredSize => const Size.fromHeight(80);
 
   @override
   State<CustomAppBar> createState() => _CustomAppBarState();
@@ -32,8 +33,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    // Only rebuild when the fields the bar shows actually change, so webview
-    // progress updates don't repaint the whole bar on every tick.
     return Selector<BrowserProvider, _AppBarSnapshot>(
       selector: (_, p) => _AppBarSnapshot(
         themeColor: p.themeColor,
@@ -64,8 +63,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
     VoidCallback reload,
     ValueChanged<String> loadUrl,
   ) {
-    // Only update the URL field when a page finished loading and the user is
-    // not typing, so we never clobber in-progress edits.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (!browserProvider.isLoading && !FocusScope.of(context).hasFocus) {
       if (browserProvider.isHomePage) {
         if (_urlController.text.isNotEmpty) _urlController.text = "";
@@ -74,145 +73,136 @@ class _CustomAppBarState extends State<CustomAppBar> {
       }
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: browserProvider.themeColor,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(10),
-          bottomRight: Radius.circular(10),
-        ),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
-        ],
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.only(
-            left: 16,
-            right: 16,
-            bottom: 8,
-            top: 6,
-          ),
-          child: Row(
-            children: [
-              _buildCircleButton(
-                icon: Icons.home_rounded,
-                onTap: goHome,
-                iconColor: browserProvider.adaptiveTextColor,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 2,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark ? CuteColors.surfaceDark : CuteColors.surfaceLight,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark ? CuteColors.glassBorderDark : CuteColors.glassBorderLight,
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
                   ),
-                  child: TextField(
-                    controller: _urlController,
-                    onSubmitted: (value) {
-                      loadUrl(value);
-                      FocusScope.of(context).unfocus();
-                    },
-                    decoration: InputDecoration(
-                      hintText: "Search...",
-                      prefixIcon: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(width: 12),
-                          const Icon(
-                            Icons.search_rounded,
-                            color: CuteColors.lightText,
-                            size: 20,
+                ],
+              ),
+              child: Row(
+                children: [
+                  _buildCircleButton(
+                    icon: Icons.home_rounded,
+                    onTap: goHome,
+                    iconColor: browserProvider.adaptiveTextColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: TextField(
+                        controller: _urlController,
+                        onSubmitted: (value) {
+                          loadUrl(value);
+                          FocusScope.of(context).unfocus();
+                        },
+                        style: TextStyle(
+                          color: browserProvider.adaptiveTextColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "Search or enter URL...",
+                          hintStyle: TextStyle(
+                            color: isDark ? Colors.white38 : Colors.grey[500],
+                            fontSize: 14,
                           ),
-                          if (browserProvider.isSafeBrowsingEnabled && browserProvider.currentUrl != "about:blank") ...[
-                            const SizedBox(width: 4),
-                            Text(
-                              browserProvider.isSecureSite
-                                  ? "Safe"
-                                  : "Not Safe",
-                              style: TextStyle(
-                                color: browserProvider.isSecureSite
-                                    ? Colors.blue 
-                                    : Colors.red,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                          prefixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(width: 12),
+                              Icon(
+                                Icons.search_rounded,
+                                color: CuteColors.primary,
+                                size: 20,
                               ),
-                            ),
-                          ],
-                          const SizedBox(width: 8),
-                        ],
-                      ),
-                      suffixIcon: browserProvider.isLoading
-                          ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(
-                                width: 10,
-                                height: 10,
-                                // child: CircularProgressIndicator( color: CuteColors.pastelPink)
-                              ),
-                            )
-                          : IconButton(
-                              icon: const Icon(
-                                Icons.refresh_rounded,
-                                color: CuteColors.lightText,
-                              ),
-                              onPressed: reload,
-                            ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide(
-                          color: browserProvider.themeColor.withValues(
-                            alpha: 0.5,
+                              if (browserProvider.isSafeBrowsingEnabled && browserProvider.currentUrl != "about:blank") ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: browserProvider.isSecureSite
+                                        ? Colors.blue.withValues(alpha: 0.2)
+                                        : Colors.red.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    browserProvider.isSecureSite ? "🔒" : "⚠️",
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(width: 8),
+                            ],
                           ),
-                          width: 1.5,
+                          suffixIcon: browserProvider.isLoading
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      color: CuteColors.primary,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                )
+                              : IconButton(
+                                  icon: Icon(
+                                    Icons.refresh_rounded,
+                                    color: browserProvider.adaptiveTextColor.withValues(alpha: 0.6),
+                                  ),
+                                  onPressed: reload,
+                                ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 0,
+                          ),
                         ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 0,
-                      ),
-                    ),
-                    style: const TextStyle(
-                      color: CuteColors.darkText,
-                      fontSize: 16,
                     ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  _buildCircleButton(
+                    icon: Icons.bookmark_border_rounded,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const BookmarksScreen()),
+                      );
+                    },
+                    iconColor: browserProvider.adaptiveTextColor,
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              _buildCircleButton(
-                icon: Icons.bookmark_border_rounded,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const BookmarksScreen()),
-                  );
-                },
-                iconColor: browserProvider.adaptiveTextColor,
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
+        );
+      }
 
   Widget _buildCircleButton({
     required IconData icon,
@@ -224,13 +214,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.35),
+          color: iconColor.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
           color: iconColor,
-          size: 24,
+          size: 22,
         ),
       ),
     );
